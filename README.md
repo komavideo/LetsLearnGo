@@ -209,3 +209,104 @@ type Person struct {
 p := Person{Name: "Alice", Age: 30}
 fmt.Println(p.Name)
 ```
+
+### 9. 接口
+
+Go 语言中的接口是一种类型系统的抽象，允许你定义一组方法，而不必明确指定实现它们的具体类型。
+
+```go
+type Writer interface {
+    Write([]byte) (int, error)
+}
+
+func SaveFile(w Writer, data []byte) error {
+    _, err := w.Write(data)
+    return err
+}
+
+type FileWriter struct{}
+
+func (fw FileWriter) Write(data []byte) (int, error) {
+    // 文件写入逻辑
+    return len(data), nil
+}
+
+func main() {
+    fileWriter := FileWriter{}
+    SaveFile(fileWriter, []byte("Hello, Go!"))
+}
+```
+
+### 10. 并发
+
+Go 语言的并发通过协程（goroutines）和通道（channels）实现。
+
+#### 协程
+
+你可以使用 `go` 关键字启动一个新的协程。
+
+```go
+func printMessage() {
+    fmt.Println("Hello, Go!")
+}
+
+func main() {
+    go printMessage()
+}
+```
+
+#### 通道
+
+通道用于在协程之间传递数据。
+
+```go
+func main() {
+    ch := make(chan int)
+    go func() {
+        ch <- 42
+    }()
+    value := <-ch
+    fmt.Println(value) // 输出 42
+}
+```
+
+### 11. 错误处理
+
+Go 语言中的错误通常作为函数的最后一个返回值返回。
+
+```go
+func divide(x, y float64) (float64, error) {
+    if y == 0 {
+        return 0, errors.New("division by zero")
+    }
+    return x / y, nil
+}
+
+func main() {
+    result, err := divide(10, 0)
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+    fmt.Println("Result:", result)
+}
+```
+
+### 12. 测试
+
+Go 语言具有内置的测试框架，你可以使用它编写和运行测试。
+
+```go
+func TestAdd(t *testing.T) {
+    result := add(1, 2)
+    if result != 3 {
+        t.Errorf("Expected 3, got %d", result)
+    }
+}
+```
+
+运行测试：
+
+```bash
+go test
+```
