@@ -395,3 +395,80 @@ r.GET("/", func(c *gin.Context) {
 })
 r.Run(":8080")
 ```
+
+### 17. 工作组（WaitGroup）
+
+工作组用于等待一组协程完成。它在并发编程中非常有用。
+
+```go
+var wg sync.WaitGroup
+
+func worker(id int) {
+    defer wg.Done()
+    fmt.Printf("Worker %d starting
+", id)
+    // 执行工作...
+}
+
+func main() {
+    for i := 0; i < 3; i++ {
+        wg.Add(1)
+        go worker(i)
+    }
+    wg.Wait()
+    fmt.Println("All workers done")
+}
+```
+
+### 18. 反射
+
+Go 的 `reflect` 包提供了在运行时检查类型和值的功能。
+
+```go
+x := 42
+v := reflect.ValueOf(x)
+fmt.Println("Type:", v.Type()) // 输出 "Type: int"
+```
+
+### 19. 单元测试和模拟
+
+Go 有强大的单元测试和模拟支持。
+
+```go
+// 要测试的函数
+func Sum(a, b int) int {
+    return a + b
+}
+
+// 测试文件中
+func TestSum(t *testing.T) {
+    result := Sum(5, 5)
+    if result != 10 {
+        t.Errorf("Expected 10, got %d", result)
+    }
+}
+```
+
+你可以使用诸如 [testify](https://github.com/stretchr/testify) 的库来简化测试和模拟。
+
+### 20. 标准库
+
+Go 的标准库非常强大，涵盖了许多常用功能。例如：
+
+- `encoding/json`：用于 JSON 序列化和反序列化。
+- `net/http`：用于 HTTP 客户端和服务器编程。
+- `os`：提供了操作系统功能，如文件操作。
+
+### 21. 最佳实践
+
+- 尽量保持代码简洁明了。
+- 遵循 Go 的格式和编码约定（使用 `gofmt` 和 `golint`）。
+- 充分利用接口来编写灵活、可测试的代码。
+- 在适当的地方使用错误处理，并及时处理错误。
+
+### 22. 进阶阅读
+
+- [Effective Go](https://golang.org/doc/effective_go.html)：官方的编码风格和最佳实践指南。
+- [Go by Example](https://gobyexample.com/)：通过示例学习 Go 语言的基础和高级概念。
+
+你现在已经具备了使用 Go 语言开发实际项目的基本技能。随着时间的推移，通过实际项目练习，你将更好地理解和掌握 Go 语言。
