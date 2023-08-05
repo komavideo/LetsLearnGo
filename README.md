@@ -473,6 +473,71 @@ Go 的标准库非常强大，涵盖了许多常用功能。例如：
 
 你现在已经具备了使用 Go 语言开发实际项目的基本技能。随着时间的推移，通过实际项目练习，你将更好地理解和掌握 Go 语言。
 
+### 23. 错误处理
+
+错误处理是 Go 语言中的一个重要部分。Go 使用 `error` 类型来处理错误。
+
+以下是一个简单的错误处理示例：
+
+```go
+func divide(x, y float64) (float64, error) {
+    if y == 0 {
+        return 0, errors.New("can't divide by zero")
+    }
+    return x / y, nil
+}
+
+func main() {
+    result, err := divide(10.0, 0.0)
+    if err != nil {
+        fmt.Println(err)
+    } else {
+        fmt.Println(result)
+    }
+}
+```
+
+在这个例子中，我们定义了一个 `divide` 函数，它接受两个浮点数作为参数，并返回一个浮点数和一个 `error`。如果第二个参数为零，我们创建一个新的错误并返回。
+
+### 24. 指针
+
+Go 语言支持指针，允许你直接访问和修改变量的内存地址。指针在 Go 中的使用非常安全，并且无需担心常见的指针问题，如悬挂指针、空指针解引用等。
+
+以下是如何在 Go 中使用指针的示例：
+
+```go
+func increment(x *int) {
+    *x++
+}
+
+func main() {
+    i := 1
+    increment(&i)
+    fmt.Println(i) // 输出 2
+}
+```
+
+在这个例子中，`increment` 函数接受一个指向 `int` 的指针，并增加指针所指向的值。在 `main` 函数中，我们通过 `&i` 将 `i` 的地址传递给 `increment` 函数。
+
+### 25. 使用 Go 进行 Web 开发
+
+Go 的标准库中包含 `net/http` 包，该包提供了构建 HTTP 服务器和客户端所需的所有功能。使用 `net/http` 包，你可以构建强大的 web 应用。
+
+以下是如何使用 `net/http` 包创建一个简单的 web 服务器的示例：
+
+```go
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Hello, World!")
+}
+
+func main() {
+    http.HandleFunc("/", helloHandler)
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+在这个例子中，我们定义了一个 `helloHandler` 函数，该函数接受一个 `http.ResponseWriter` 和一个 `*http.Request`。然后，我们使用 `http.HandleFunc` 函数注册 `helloHandler` 为一个处理器（handler），并使用 `http.ListenAndServe` 启动服务器。
+
 ## 小马视频频道
 
 https://komavideo.com
