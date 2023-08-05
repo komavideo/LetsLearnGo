@@ -115,3 +115,97 @@ hello.exe
 ```
 
 你应该会看到 "Hello, World!" 被打印到控制台上。
+
+### 4. 变量和常量
+
+在 Go 语言中，你可以使用 `var` 关键字声明变量，使用 `const` 关键字声明常量。
+
+#### 变量
+
+```go
+var x int // 声明一个整型变量 x
+x = 10   // 给 x 赋值
+
+var y = 20 // 声明并初始化变量 y
+
+z := 30 // 短变量声明，自动推断类型
+```
+
+#### 常量
+
+```go
+const pi = 3.1415 // 声明一个浮点型常量 pi
+```
+
+### 5. 控制结构
+
+Go 语言支持常见的控制结构，如 `if`、`else`、`for` 循环等。
+
+#### 条件语句
+
+```go
+x := 10
+if x > 5 {
+    fmt.Println("x 大于 5")
+} else {
+    fmt.Println("x 小于或等于 5")
+}
+```
+
+#### 循环
+
+```go
+for i := 0; i < 10; i++ {
+    fmt.Println(i)
+}
+```
+
+### 6. 函数
+
+你可以使用 `func` 关键字定义函数。
+
+```go
+func add(x int, y int) int {
+    return x + y
+}
+
+result := add(10, 20)
+fmt.Println("结果:", result)
+```
+
+### 7. 数组和切片
+
+Go 语言中有数组和切片两种类似的数据结构。
+
+#### 数组
+
+数组长度固定。
+
+```go
+var numbers [5]int
+numbers[0] = 1
+numbers[1] = 2
+```
+
+#### 切片
+
+切片长度可变。
+
+```go
+numbers := []int{1, 2, 3, 4}
+numbers = append(numbers, 5)
+```
+
+### 8. 结构体
+
+结构体用于定义复合类型。
+
+```go
+type Person struct {
+    Name string
+    Age  int
+}
+
+p := Person{Name: "Alice", Age: 30}
+fmt.Println(p.Name)
+```
