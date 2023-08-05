@@ -310,3 +310,88 @@ func TestAdd(t *testing.T) {
 ```bash
 go test
 ```
+
+### 13. 包管理
+
+Go 有一个名为 Go Modules 的包管理系统，允许你轻松地管理项目的依赖关系。
+
+#### 初始化模块
+
+在项目根目录中运行以下命令：
+
+```bash
+go mod init myproject
+```
+
+这将创建一个名为 `go.mod` 的文件，其中包含项目的依赖信息。
+
+#### 添加依赖
+
+你可以通过 `go get` 命令添加依赖。
+
+```bash
+go get github.com/some/package
+```
+
+### 14. 文件操作
+
+Go 的 `os` 和 `io/ioutil` 包提供了文件操作的基本功能。
+
+#### 读取文件
+
+```go
+content, err := ioutil.ReadFile("file.txt")
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(string(content))
+```
+
+#### 写入文件
+
+```go
+content := []byte("Hello, Go!")
+err := ioutil.WriteFile("file.txt", content, 0644)
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### 15. 网络编程
+
+Go 的 `net` 包提供了创建和操作网络连接的功能。
+
+#### 创建 HTTP 服务器
+
+```go
+http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Hello, World!")
+})
+
+http.ListenAndServe(":8080", nil)
+```
+
+#### 发送 HTTP 请求
+
+```go
+resp, err := http.Get("https://www.example.com")
+if err != nil {
+    log.Fatal(err)
+}
+defer resp.Body.Close()
+
+body, err := ioutil.ReadAll(resp.Body)
+fmt.Println(string(body))
+```
+
+### 16. 使用第三方库
+
+Go 社区有许多优秀的第三方库。例如，你可以使用 [Gin](https://github.com/gin-gonic/gin) 创建更复杂的 Web 服务器。
+
+```go
+r := gin.Default()
+r.GET("/", func(c *gin.Context) {
+    c.String(200, "Hello, World!")
+})
+r.Run(":8080")
+```
