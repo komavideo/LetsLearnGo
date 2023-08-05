@@ -472,3 +472,23 @@ Go 的标准库非常强大，涵盖了许多常用功能。例如：
 - [Go by Example](https://gobyexample.com/)：通过示例学习 Go 语言的基础和高级概念。
 
 你现在已经具备了使用 Go 语言开发实际项目的基本技能。随着时间的推移，通过实际项目练习，你将更好地理解和掌握 Go 语言。
+
+## 小马视频频道
+
+https://komavideo.com
+
+## 深学AWS
+
+https://deeplearnaws.com
+
+## 深学Azure
+
+https://deeplearnazure.com/
+
+## 深学GCP
+
+https://deeplearngcp.com/
+
+## Youtube
+
+https://youtube.com/@deeplearncloud
