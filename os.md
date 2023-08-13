@@ -1530,14 +1530,1050 @@ func main() {
 }
 ```
 
+### 61. 创建文件并设置权限
 
+使用 `os.OpenFile`，您可以在创建文件时设置特定的权限。
 
+```go
+package main
 
+import (
+	"fmt"
+	"os"
+)
 
+func main() {
+	file, err := os.OpenFile("example.txt", os.O_RDWR|os.O_CREATE, 0755)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
 
+	fmt.Println("File created with permissions 0755")
+}
+```
 
+### 62. 设置文件的访问和修改时间
 
+使用 `os.Chtimes`，您可以设置文件的访问时间和修改时间。
 
+```go
+package main
 
+import (
+	"fmt"
+	"os"
+	"time"
+)
 
+func main() {
+	atime := time.Date(2023, time.August, 7, 0, 0, 0, 0, time.UTC)
+	mtime := time.Date(2023, time.August, 7, 12, 0, 0, 0, time.UTC)
+	err := os.Chtimes("example.txt", atime, mtime)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("File access and modification times updated")
+}
+```
 
+### 63. 将字符串作为文件名
+
+有时候，文件名可能包含特殊字符。您可以使用 `path/filepath` 包的 `Base` 和 `FromSlash` 函数来确保文件名的正确性。
+
+```go
+package main
+
+import (
+	"fmt"
+	"path/filepath"
+)
+
+func main() {
+	fileName := filepath.FromSlash("some/directory/file.txt")
+	fileName = filepath.Base(fileName)
+	fmt.Println("File name:", fileName)
+}
+```
+
+### 64. 检查文件或目录的存在
+
+您可以组合使用 `os.Stat` 和 `os.IsNotExist` 来检查文件或目录是否存在。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	_, err := os.Stat("example.txt")
+	if os.IsNotExist(err) {
+		fmt.Println("File does not exist")
+	} else {
+		fmt.Println("File exists")
+	}
+}
+```
+
+### 65. 将文件映射到内存
+
+通过 `syscall` 包，您可以将文件映射到内存中，以便高效访问。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"syscall"
+)
+
+func main() {
+	file, err := os.Open("example.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	mmap, err := syscall.Mmap(int(file.Fd()), 0, int(fileInfo.Size()), syscall.PROT_READ, syscall.MAP_SHARED)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println(string(mmap))
+
+	if err := syscall.Munmap(mmap); err != nil {
+		fmt.Println(err)
+	}
+}
+```
+
+### 66. 检测文件是否已打开
+
+您可以使用 `file.Stat` 和错误检查来确定文件是否已打开。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, err := os.Open("example.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	_, err = file.Stat()
+	if err != nil {
+		fmt.Println("File is not open")
+	} else {
+		fmt.Println("File is open")
+	}
+}
+```
+
+### 67. 判断路径是否为目录
+
+使用 `os.FileInfo` 的 `IsDir` 方法，您可以确定路径是否为目录。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	info, err := os.Stat("example")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if info.IsDir() {
+		fmt.Println("It's a directory")
+	} else {
+		fmt.Println("It's not a directory")
+	}
+}
+```
+
+### 68. 文件重命名
+
+使用 os.Rename，您可以重命名文件或目录。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	err := os.Rename("oldname.txt", "newname.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("File renamed successfully")
+}
+```
+
+### 69. 获取文件的大小
+
+使用 `os.FileInfo` 的 `Size` 方法，您可以获取文件的大小。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	info, err := os.Stat("example.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	size := info.Size()
+	fmt.Printf("File size: %d bytes\n", size)
+}
+```
+
+### 70. 检测文件是否可执行
+
+您可以通过检查文件的执行权限来确定文件是否可执行。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	info, err := os.Stat("example.sh")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	mode := info.Mode()
+	if mode&0111 != 0 {
+		fmt.Println("File is executable")
+	} else {
+		fmt.Println("File is not executable")
+	}
+}
+```
+
+### 71. 获取操作系统名称
+
+使用 `runtime.GOOS` 可以获取操作系统的名称。
+
+```go
+package main
+
+import (
+	"fmt"
+	"runtime"
+)
+
+func main() {
+	fmt.Println("Operating System:", runtime.GOOS)
+}
+```
+
+### 72. 获取操作系统的架构
+
+使用 `runtime.GOARCH` 可以获取操作系统的架构。
+
+```go
+package main
+
+import (
+	"fmt"
+	"runtime"
+)
+
+func main() {
+	fmt.Println("Architecture:", runtime.GOARCH)
+}
+```
+
+### 73. 使用 os/user 获取其他用户的信息
+
+您可以使用 `os/user` 包中的函数来获取系统上其他用户的信息。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os/user"
+)
+
+func main() {
+	user, err := user.Lookup("username")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("User Name:", user.Username)
+	fmt.Println("User ID:", user.Uid)
+	fmt.Println("Home Directory:", user.HomeDir)
+}
+```
+
+### 74. 读取命令行参数
+
+使用 `os.Args` 可以读取传递给程序的命令行参数。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	args := os.Args
+	fmt.Println("Arguments:", args)
+}
+```
+
+### 75. 创建符号链接
+
+使用 `os.Symlink` 可以创建符号链接。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	err := os.Symlink("original.txt", "symlink.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("Symbolic link created")
+}
+```
+
+### 76. 获取文件的所有者和所属组（Unix-like 系统）
+
+使用 `os.Stat` 和类型断言，您可以获取文件的所有者和所属组（适用于 Unix-like 系统）。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"syscall"
+)
+
+func main() {
+	fileInfo, err := os.Stat("example.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	stat, ok := fileInfo.Sys().(*syscall.Stat_t)
+	if !ok {
+		fmt.Println("Not a Unix-like system")
+		return
+	}
+
+	fmt.Println("Owner UID:", stat.Uid)
+	fmt.Println("Group GID:", stat.Gid)
+}
+```
+
+### 77. 更改文件所有者和所属组（Unix-like 系统）
+
+使用 `os.Chown`，您可以更改文件的所有者和所属组。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	err := os.Chown("example.txt", 1000, 1000) // UID and GID
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("Owner and group changed")
+}
+```
+
+### 78. 打开URL（依赖于系统）
+
+虽然不是 `os` 包的一部分，但是使用 `exec.Command` 可以根据系统打开URL。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os/exec"
+	"runtime"
+)
+
+func main() {
+	var err error
+
+	switch runtime.GOOS {
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", "http://www.google.com").Start()
+	case "darwin":
+		err = exec.Command("open", "http://www.google.com").Start()
+	case "linux":
+		err = exec.Command("xdg-open", "http://www.google.com").Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("URL opened")
+}
+```
+
+### 79. 创建多级目录
+
+使用 `os.MkdirAll`，您可以一次创建多级目录。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	err := os.MkdirAll("path/to/directory", 0755)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("Multi-level directory created")
+}
+```
+
+### 80. 从环境变量创建文件路径
+
+使用 `os.Getenv` 和 `filepath.Join`，您可以从环境变量创建文件路径。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
+
+func main() {
+	home := os.Getenv("HOME")
+	path := filepath.Join(home, "file.txt")
+	fmt.Println("Path:", path)
+}
+```
+
+### 81. 获取文件的哈希值
+
+可以通过组合使用 `os` 库和 `crypto` 包来计算文件的哈希值。
+
+```go
+package main
+
+import (
+	"crypto/sha256"
+	"fmt"
+	"io"
+	"os"
+)
+
+func main() {
+	file, err := os.Open("example.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, file); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	hashValue := hasher.Sum(nil)
+	fmt.Printf("SHA-256 hash: %x\n", hashValue)
+}
+```
+
+### 82. 创建具有特定大小的空文件
+
+使用 `os.Create` 和 `os.Truncate` 可以创建具有特定大小的空文件。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, err := os.Create("example.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	err = os.Truncate("example.txt", 1024) // 设置文件大小为 1024 字节
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("Empty file of size 1024 bytes created")
+}
+```
+
+### 83. 在临时目录中创建文件
+
+使用 `os.CreateTemp` 可以在临时目录中创建文件。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	tempFile, err := os.CreateTemp("", "example.*.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer os.Remove(tempFile.Name())
+
+	fmt.Println("Temporary file created:", tempFile.Name())
+}
+```
+
+### 84. 使用文件锁
+
+您可以使用第三方库，例如 `github.com/gofrs/flock`，来实现文件锁。
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/gofrs/flock"
+	"time"
+)
+
+func main() {
+	fileLock := flock.New("example.lock")
+	locked, err := fileLock.TryLock()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if locked {
+		fmt.Println("File locked")
+		time.Sleep(5 * time.Second)
+		fileLock.Unlock()
+		fmt.Println("File unlocked")
+	} else {
+		fmt.Println("Failed to lock file")
+	}
+}
+```
+
+### 85. 检测文件是否被其他进程使用（Windows）
+
+在 Windows 上，您可以尝试以独占模式打开文件来检测文件是否被其他进程使用。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, err := os.OpenFile("example.txt", os.O_RDWR|os.O_EXCL, 0666)
+	if err != nil {
+		fmt.Println("File is being used by another process")
+		return
+	}
+	defer file.Close()
+
+	fmt.Println("File is not being used by another process")
+}
+```
+
+### 86. 设置文件的隐藏属性（Windows）
+
+在 Windows 上，您可以使用 `syscall` 包来设置文件的隐藏属性。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"syscall"
+)
+
+func main() {
+	filename := "example.txt"
+	ptr, err := syscall.UTF16PtrFromString(filename)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	attributes, err := syscall.GetFileAttributes(ptr)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = syscall.SetFileAttributes(ptr, attributes|syscall.FILE_ATTRIBUTE_HIDDEN)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("File is now hidden")
+}
+```
+
+### 87. 创建 FIFO（命名管道）
+
+在 `Unix-like` 系统上，您可以使用 `syscall.Mkfifo` 创建 FIFO。
+
+```go
+package main
+
+import (
+	"fmt"
+	"syscall"
+)
+
+func main() {
+	err := syscall.Mkfifo("example.fifo", 0666)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("FIFO (named pipe) created")
+}
+```
+
+### 88. 复制文件
+
+您可以使用 `io.Copy` 和 `os` 库来复制文件。
+
+```go
+package main
+
+import (
+	"fmt"
+	"io"
+	"os"
+)
+
+func main() {
+	srcFile, err := os.Open("source.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create("destination.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("File copied successfully")
+}
+```
+
+### 89. 从文件末尾读取
+
+使用 `os.File` 的 `Seek` 方法，您可以从文件末尾开始读取。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, err := os.Open("example.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	offset, err := file.Seek(0, os.SEEK_END)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	buffer := make([]byte, 10)
+	offset, err = file.Seek(-10, os.SEEK_CUR)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	_, err = file.Read(buffer)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("Last 10 bytes:", string(buffer))
+}
+```
+
+### 90. 逐行读取文件
+
+使用 `bufio.Scanner`，您可以方便地逐行读取文件。
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, err := os.Open("example.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println(err)
+	}
+}
+```
+
+### 91. 移动文件
+
+移动文件可以通过组合使用 `os.Rename` 和 `os.Remove` 来实现。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	err := os.Rename("source.txt", "destination.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("File moved successfully")
+}
+```
+
+### 92. 检测文件是否为空
+
+您可以使用 `os.Stat` 来检查文件是否为空。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	fileInfo, err := os.Stat("example.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if fileInfo.Size() == 0 {
+		fmt.Println("File is empty")
+	} else {
+		fmt.Println("File is not empty")
+	}
+}
+```
+
+### 93. 将字符串写入文件
+
+使用 `os.Create` 和 `io.WriteString`，您可以将字符串写入文件。
+
+```go
+package main
+
+import (
+	"fmt"
+	"io"
+	"os"
+)
+
+func main() {
+	file, err := os.Create("example.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	_, err = io.WriteString(file, "This is a string")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("String written to file")
+}
+```
+
+### 94. 读取文件的前N行
+
+使用 `bufio.Scanner`，您可以读取文件的前 `N` 行。
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, err := os.Open("example.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	linesToRead := 5
+	for i := 0; i < linesToRead && scanner.Scan(); i++ {
+		fmt.Println(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println(err)
+	}
+}
+```
+
+### 95. 检测文件是否可读
+
+使用 `os.OpenFile` 和特定的标志，您可以检查文件是否可读。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, err := os.OpenFile("example.txt", os.O_RDONLY, 0666)
+	if err != nil {
+		fmt.Println("File is not readable")
+		return
+	}
+	defer file.Close()
+
+	fmt.Println("File is readable")
+}
+```
+
+### 96. 检测文件是否可写
+
+使用 `os.OpenFile` 和特定的标志，您可以检查文件是否可写。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, err := os.OpenFile("example.txt", os.O_WRONLY, 0666)
+	if err != nil {
+		fmt.Println("File is not writable")
+		return
+	}
+	defer file.Close()
+
+	fmt.Println("File is writable")
+}
+```
+
+### 97. 设置文件权限
+
+使用 `os.Chmod`，您可以设置文件的权限。
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main() {
+	err := os.Chmod("example.txt", 0644)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("File permissions changed")
+}
+```
+
+### 98. 获取文件的扩展名
+
+使用 `filepath.Ext`，您可以获取文件的扩展名。
+
+```go
+package main
+
+import (
+	"fmt"
+	"path/filepath"
+)
+
+func main() {
+	fileName := "example.txt"
+	extension := filepath.Ext(fileName)
+	fmt.Println("File extension:", extension)
+}
+```
+
+### 99. 获取文件的目录和基本名称
+
+使用 `filepath.Dir` 和 `filepath.Base`，您可以获取文件的目录和基本名称。
+
+```go
+package main
+
+import (
+	"fmt"
+	"path/filepath"
+)
+
+func main() {
+	path := "/path/to/file.txt"
+	dir := filepath.Dir(path)
+	base := filepath.Base(path)
+	fmt.Println("Directory:", dir)
+	fmt.Println("Base name:", base)
+}
+```
+
+### 100. 合并路径
+
+使用 `filepath.Join`，您可以合并多个路径元素。
+
+```go
+package main
+
+import (
+	"fmt"
+	"path/filepath"
+)
+
+func main() {
+	path := filepath.Join("path", "to", "file.txt")
+	fmt.Println("Joined path:", path)
+}
+```
+
+Done.
