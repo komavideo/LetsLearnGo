@@ -5,6 +5,7 @@
 
 + [使用 goenv 管理本地 Go 语言版本](/goenv.md)
 + [Go 语言教程](/basic.md)
++ [模块化编程 module](/module.md)
 + [处理json数据](/json.md)
 + [使用log库](/log.md)
 + [使用os库](/os.md)
