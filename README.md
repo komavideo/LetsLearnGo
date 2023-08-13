@@ -10,6 +10,7 @@
 + [使用log库](/log.md)
 + [使用os库](/os.md)
 + [使用time库](/time.md)
++ [使用rand库](/rand.md)
 
 ## The Go Playground
 
