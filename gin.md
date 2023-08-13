@@ -407,9 +407,343 @@ func main() {
 }
 ```
 
+### 17. 自定义HTTP响应
 
+你可以使用Gin为不同的数据类型创建自定义响应。
 
+```go
+package main
 
+import "github.com/gin-gonic/gin"
 
+func main() {
+	r := gin.Default()
+	r.GET("/json", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "JSON response"})
+	})
+	r.GET("/yaml", func(c *gin.Context) {
+		c.YAML(200, gin.H{"message": "YAML response"})
+	})
+	r.GET("/xml", func(c *gin.Context) {
+		c.XML(200, gin.H{"message": "XML response"})
+	})
+	r.Run(":8080")
+}
+```
 
+### 18. 使用Gin验证请求体
+
+Gin可以帮助你验证传入的请求体，例如检查必填字段。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+type Login struct {
+	User     string `json:"user" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+func main() {
+	r := gin.Default()
+	r.POST("/login", func(c *gin.Context) {
+		var login Login
+
+		if err := c.ShouldBindJSON(&login); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if login.User != "user" || login.Password != "password" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Successfully authenticated"})
+	})
+	r.Run(":8080")
+}
+```
+
+### 19. 使用Gin提供WebSocket服务
+
+你可以使用Gin配合WebSocket库来提供WebSocket服务。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"net/http"
+)
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+func main() {
+	r := gin.Default()
+	r.GET("/ws", func(c *gin.Context) {
+		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
+			return
+		}
+
+		for {
+			messageType, p, err := conn.ReadMessage()
+			if err != nil {
+				return
+			}
+			if err := conn.WriteMessage(messageType, p); err != nil {
+				return
+			}
+		}
+	})
+	r.Run(":8080")
+}
+```
+
+### 20. 使用CORS中间件
+
+跨源资源共享（CORS）是一种安全措施，你可以使用Gin的CORS中间件来控制。
+
+```go
+package main
+
+import (
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"https://example.com"}
+	r.Use(cors.New(config))
+
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(200, "pong")
+	})
+	r.Run(":8080")
+}
+```
+
+### 21. 连接数据库
+
+你可以将Gin与数据库结合使用，例如MySQL。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+)
+
+type User struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+func main() {
+	db, err := gorm.Open("mysql", "user:password@/dbname?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	db.AutoMigrate(&User{})
+
+	r := gin.Default()
+	r.GET("/users", func(c *gin.Context) {
+		var users []User
+		db.Find(&users)
+		c.JSON(200, users)
+	})
+	r.Run(":8080")
+}
+```
+
+请确保修改上述代码中的数据库连接字符串以匹配你的配置。
+
+### 22. 组合多个中间件
+
+你可以为特定路由组合多个中间件。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func middlewareOne() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 做一些操作
+		c.Next()
+	}
+}
+
+func middlewareTwo() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 做一些操作
+		c.Next()
+	}
+}
+
+func main() {
+	r := gin.Default()
+	r.GET("/protected", middlewareOne(), middlewareTwo(), func(c *gin.Context) {
+		c.String(200, "Protected content!")
+	})
+	r.Run(":8080")
+}
+```
+
+### 23. 使用自定义HTTP错误处理
+
+你可以定义自定义HTTP错误处理程序来优雅地处理错误。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(404, gin.H{"message": "Not Found"})
+	})
+	r.NoMethod(func(c *gin.Context) {
+		c.JSON(405, gin.H{"message": "Method Not Allowed"})
+	})
+	r.Run(":8080")
+}
+```
+
+### 24. 使用Gin测试路由
+
+Gin提供了一种方便的方法来测试你的路由。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+func TestPingRoute(t *testing.T) {
+	r := gin.Default()
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(200, "pong")
+	})
+
+	req, _ := http.NewRequest("GET", "/ping", nil)
+	resp := httptest.NewRecorder()
+	r.ServeHTTP(resp, req)
+
+	if resp.Code != 200 || resp.Body.String() != "pong" {
+		t.Fail()
+	}
+}
+```
+
+### 25. 使用Gin处理Multipart/Urlencoded Form
+
+你可以使用Gin处理 `Multipart/Urlencoded` 表单。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+	r.POST("/form", func(c *gin.Context) {
+		form := c.Request.FormValue("message")
+		file, _ := c.FormFile("file")
+
+		c.String(200, "Message: %s, File: %s", form, file.Filename)
+	})
+	r.Run(":8080")
+}
+```
+
+### 26. 使用Gin渲染PureJSON
+
+与JSON不同，`PureJSON` 不仅将特殊HTML字符替换为其Unicode字面量，还会输出UTF-8。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+	r.GET("/json", func(c *gin.Context) {
+		c.PureJSON(200, gin.H{
+			"message": "<b>Hello, world!</b>",
+		})
+	})
+	r.Run(":8080")
+}
+```
+
+### 27. 创建自定义实例
+
+你可以创建自定义Gin实例并手动配置它。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(200, "pong")
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 28. 使用Gin处理请求上下文
+
+你可以在Gin的请求上下文中存储和检索数据。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+	r.GET("/set", func(c *gin.Context) {
+		c.Set("key", "value")
+		c.Status(200)
+	})
+	r.GET("/get", func(c *gin.Context) {
+		value, exists := c.Get("key")
+		if exists {
+			c.String(200, value.(string))
+		} else {
+			c.Status(404)
+		}
+	})
+	r.Run(":8080")
+}
+```
 
