@@ -10,6 +10,14 @@
 + [使用os库](/os.md)
 + [使用time库](/time.md)
 
+## The Go Playground
+
+https://go.dev/play/
+
+## Go Packages
+
+https://pkg.go.dev/
+
 ## 小马视频频道
 
 https://komavideo.com
