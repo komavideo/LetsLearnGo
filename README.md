@@ -11,6 +11,7 @@
 + [使用os库](/os.md)
 + [使用time库](/time.md)
 + [使用rand库](/rand.md)
++ [使用text/template库](/text_template.md)
 
 ## Web 开发
 
