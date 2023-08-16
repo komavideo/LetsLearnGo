@@ -8,10 +8,11 @@
 + [模块化编程 module](/module.md)
 + [处理json数据](/json.md)
 + [使用log库](/log.md)
++ [使用math库](/math.md)
 + [使用os库](/os.md)
-+ [使用time库](/time.md)
 + [使用rand库](/rand.md)
 + [使用text/template库](/text_template.md)
++ [使用time库](/time.md)
 
 ## Web 开发
 
