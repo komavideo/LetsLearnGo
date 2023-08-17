@@ -2358,13 +2358,1657 @@ func main() {
 Matched
 ```
 
+### 60. 使用条件操作符
 
+`text/template` 库没有内置的三元操作符，但你可以通过嵌套 `if` 语句来模拟这种行为。
 
+```go
+package main
 
+import (
+	"text/template"
+	"os"
+)
 
+func main() {
+	tmpl := `
+{{if .IsPremium}}Premium{{else}}Free{{end}} User
+`
 
+	data := struct {
+		IsPremium bool
+	}{true}
 
+	t, err := template.New("test").Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
 
+输出：
 
+```
+Premium User
+```
 
+### 61. 避免 HTML 转义
 
+默认情况下，模板会转义 HTML 字符。如果你希望防止这种转义，可以使用 `template.HTML` 类型。
+
+```go
+package main
+
+import (
+	"html/template"
+	"os"
+)
+
+func main() {
+	tmpl := `Message: {{.Message}}`
+
+	data := struct {
+		Message template.HTML
+	}{"<strong>Hello</strong>"}
+
+	t, err := template.New("test").Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Message: <strong>Hello</strong>
+```
+
+### 62. 自定义分隔符
+
+如果默认的 `{{` 和 `}}` 分隔符与你的数据冲突，你可以使用 `Delims` 方法更改它们。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+[[.Name]] is [[.Age]] years old.
+`
+
+	data := struct {
+		Name string
+		Age  int
+	}{"Alice", 30}
+
+	t, err := template.New("test").Delims("[[", "]]").Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Alice is 30 years old.
+```
+
+### 63. 嵌入和使用自定义函数
+
+你可以在模板中定义和使用自定义函数。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+	"strings"
+)
+
+func main() {
+	funcs := template.FuncMap{
+		"capitalize": strings.Title,
+	}
+
+	tmpl := `{{. | capitalize}}`
+
+	t, err := template.New("test").Funcs(funcs).Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, "hello world")
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Hello World
+```
+
+### 64. 使用 template 嵌套模板
+
+你可以在模板中嵌套其他模板，这在组织和重用模板片段时非常有用。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{define "list"}}
+	<ul>
+	{{range .}}
+		<li>{{.}}</li>
+	{{end}}
+	</ul>
+{{end}}
+
+Items:
+{{template "list" .Items}}
+`
+
+	data := struct {
+		Items []string
+	}{[]string{"Apple", "Banana", "Cherry"}}
+
+	t, err := template.New("test").Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Items:
+	<ul>
+		<li>Apple</li>
+		<li>Banana</li>
+		<li>Cherry</li>
+	</ul>
+```
+
+### 65. 使用 must 简化错误处理
+
+`template.Must` 是一个辅助函数，它简化了模板解析时的错误处理。如果模板解析出错，它会引发 `panic`。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmplStr := `Hello, {{.Name}}!`
+	t := template.Must(template.New("test").Parse(tmplStr))
+
+	data := struct {
+		Name string
+	}{"Alice"}
+
+	err := t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Hello, Alice!
+```
+
+### 66. 使用 ParseGlob 加载多个模板文件
+
+如果你有多个模板文件，可以使用 `ParseGlob` 函数一次性加载它们。
+
+```go
+// 假设你有两个文件: tmpl1.txt 和 tmpl2.txt
+// tmpl1.txt 的内容为: "Template 1: Hello, {{.}}!"
+// tmpl2.txt 的内容为: "Template 2: Hi, {{.}}!"
+
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	t := template.Must(template.New("test").ParseGlob("*.txt"))
+
+	err := t.ExecuteTemplate(os.Stdout, "tmpl1.txt", "World")
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Template 1: Hello, World!
+```
+
+### 67. 使用 init 在模板中设置默认函数
+
+你可以使用 `init` 函数在包级别预先为模板设置函数。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+	"strings"
+)
+
+var funcMap = template.FuncMap{
+	"upper": strings.ToUpper,
+}
+
+func init() {
+	template.New("test").Funcs(funcMap)
+}
+
+func main() {
+	tmpl := `{{. | upper}}`
+
+	t, err := template.New("test").Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+
+	err = t.Execute(os.Stdout, "hello")
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+HELLO
+```
+
+### 68. 使用 block 定义模板块
+
+`block` 是一个定义模板块的动作。它定义了可以用于其他模板的模板块。如果没有定义替代模板，`block` 的默认模板将被执行。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{define "list"}}
+<ul>
+	{{range .}}
+	<li>{{.}}</li>
+	{{end}}
+</ul>
+{{end}}
+
+{{block "list" .Items}}
+<ul>
+	{{range .}}
+	<li><strong>{{.}}</strong></li>
+	{{end}}
+</ul>
+{{end}}
+`
+
+	data := struct {
+		Items []string
+	}{[]string{"Apple", "Banana", "Cherry"}}
+
+	t, err := template.New("test").Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+<ul>
+	<li><strong>Apple</strong></li>
+	<li><strong>Banana</strong></li>
+	<li><strong>Cherry</strong></li>
+</ul>
+```
+
+### 69. 使用 clone 复制模板
+
+你可以使用 `Clone` 方法复制一个模板，这在多个模板共享同一组函数或设置时非常有用。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmplStr := `Hello, {{.Name}}!`
+
+	// 创建一个模板并解析
+	t := template.New("test")
+	template.Must(t.Parse(tmplStr))
+
+	// 克隆模板
+	tClone, err := t.Clone()
+	if err != nil {
+		panic(err)
+	}
+
+	data := struct {
+		Name string
+	}{"Alice"}
+
+	err = tClone.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Hello, Alice!
+```
+
+### 70. 使用 nest 嵌套模板定义
+
+使用 `nest`，你可以在一个模板定义中嵌套另一个模板定义。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{define "T1"}}ONE{{end}}
+
+{{define "T2"}}
+{{template "T1"}}
+TWO
+{{end}}
+
+{{template "T2"}}
+`
+
+	t, err := template.New("test").Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, nil)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+ONE
+TWO
+```
+
+### 71. 使用 text/template/parse 解析模板
+
+除了常规的模板处理外，你还可以直接使用 `text/template/parse` 包来手动解析模板。
+
+```go
+package main
+
+import (
+	"text/template/parse"
+	"fmt"
+)
+
+func main() {
+	tmplStr := `Hello, {{.Name}}!`
+	tree, err := parse.Parse("test", tmplStr, "{{", "}}")
+	if err != nil {
+		panic(err)
+	}
+
+	// 输出解析后的模板树
+	fmt.Println(tree.Root.String())
+}
+```
+
+输出（解析后的模板树）：
+
+```
+"Hello, {{.Name}}!"
+```
+
+### 72. 使用 - 控制空白
+
+在模板中，`{{-` 和 `-}}` 语法允许你控制生成的输出中的空白。`{{-` 会消除其左侧的所有空白，而 `-}}` 会消除其右侧的所有空白。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{- "Hello," -}} 
+{{- " World!" -}}
+`
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, nil)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Hello, World!
+```
+
+### 73. 递归模板
+
+模板可以递归地引用自己，这在处理嵌套结构如树时非常有用。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+type Node struct {
+	Value    string
+	Children []*Node
+}
+
+func main() {
+	tmpl := `
+{{define "node"}}
+	{{.Value}}
+	{{if .Children}}
+		{{range .Children}}
+		{{template "node" .}}
+		{{end}}
+	{{end}}
+{{end}}
+
+{{template "node" .}}
+`
+
+	root := &Node{
+		Value: "Root",
+		Children: []*Node{
+			{Value: "Child1"},
+			{
+				Value: "Child2",
+				Children: []*Node{
+					{Value: "Grandchild1"},
+					{Value: "Grandchild2"},
+				},
+			},
+		},
+	}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, root)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Root
+Child1
+Child2
+Grandchild1
+Grandchild2
+```
+
+### 74. 使用结构体方法作为模板函数
+
+你可以在模板中直接调用数据结构的方法。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+type Person struct {
+	FirstName string
+	LastName  string
+}
+
+func (p Person) FullName() string {
+	return p.FirstName + " " + p.LastName
+}
+
+func main() {
+	tmpl := `Full name: {{.FullName}}`
+
+	person := Person{"Alice", "Johnson"}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, person)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Full name: Alice Johnson
+```
+
+### 75. 使用模板注释
+
+`{{/* */}}` 允许你在模板中添加注释，这些注释在执行模板时不会被包含在输出中。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{/* This is a comment and will not appear in the output. */}}
+Hello, {{.Name}}!
+`
+
+	data := struct {
+		Name string
+	}{"Alice"}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Hello, Alice!
+```
+
+### 76. 使用 len 函数获取长度
+
+你可以使用内置的 `len` 函数来获取字符串、数组、切片或映射的长度。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `Number of items: {{len .Items}}`
+
+	data := struct {
+		Items []string
+	}{[]string{"apple", "banana", "cherry"}}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Number of items: 3
+```
+
+### 77. 使用 printf 进行字符串格式化
+
+虽然我们已经简要介绍了 `printf`，但你可以使用它进行更复杂的字符串格式化。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `{{printf "%s has %d apples." .Name .Count}}`
+
+	data := struct {
+		Name  string
+		Count int
+	}{"Alice", 5}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Alice has 5 apples.
+```
+
+### 78. 使用 index 访问数组、切片或映射
+
+`index` 函数可以用于访问数组、切片或映射的元素。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `Second item: {{index .Items 1}}`
+
+	data := struct {
+		Items []string
+	}{[]string{"apple", "banana", "cherry"}}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Second item: banana
+```
+
+### 79. 使用 call 调用方法或函数
+
+你可以使用 `call` 功能来调用方法或函数，并传递参数。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+type MathOps struct{}
+
+func (MathOps) Add(a, b int) int {
+	return a + b
+}
+
+func main() {
+	tmpl := `Result: {{call .Add 5 3}}`
+
+	math := MathOps{}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, math)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Result: 8
+```
+
+### 80. 使用模板集
+
+你可以创建一个模板集，其中包含多个模板，这些模板可以相互引用。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	templates := `
+{{define "A"}}Template A {{template "B"}}{{end}}
+{{define "B"}}Template B{{end}}
+`
+
+	tmpl, err := template.New("set").Parse(templates)
+	if err != nil {
+		panic(err)
+	}
+
+	err = tmpl.ExecuteTemplate(os.Stdout, "A", nil)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Template A Template B
+```
+
+### 81. 使用 else if 构造
+
+在模板中，你可以使用 `else if` 来构造更复杂的条件逻辑。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{if eq .Color "red"}}
+Red
+{{else if eq .Color "blue"}}
+Blue
+{{else}}
+Unknown
+{{end}}
+`
+
+	data := struct {
+		Color string
+	}{"blue"}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Blue
+```
+
+### 82. 使用 with 构造
+
+`with` 动作可以更改当前点的上下文。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{with .Address}}
+City: {{.City}}, Country: {{.Country}}
+{{end}}
+`
+
+	data := struct {
+		Name    string
+		Address struct {
+			City    string
+			Country string
+		}
+	}{"Alice", struct {
+		City    string
+		Country string
+	}{"New York", "USA"}}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+City: New York, Country: USA
+```
+
+### 83. 使用 `$` 访问顶级上下文
+
+在嵌套的模板操作中，你可以使用 `$` 符号来访问最顶级的上下文。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{range .Items}}
+{{with .SubItems}}
+Item: {{$.Name}}, SubItem: {{.}}
+{{end}}
+{{end}}
+`
+
+	data := struct {
+		Items []struct {
+			Name     string
+			SubItems []string
+		}
+	}{
+		{
+			Name:     "Item1",
+			SubItems: []string{"Sub1", "Sub2"},
+		},
+	}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Item: Item1, SubItem: Sub1
+Item: Item1, SubItem: Sub2
+```
+
+### 84. 处理空值
+
+模板中的 `with` 动作也可以用于处理可能为空的字段。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{with .Description}}
+Description: {{.}}
+{{else}}
+No description provided.
+{{end}}
+`
+
+	data := struct {
+		Name        string
+		Description *string
+	}{"Item1", nil}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+No description provided.
+```
+
+### 85. 使用自定义函数处理错误
+
+你可以定义自定义函数来处理可能的错误，并在模板中使用它。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+	"errors"
+)
+
+func safeDivide(a, b float64) (float64, error) {
+	if b == 0 {
+		return 0, errors.New("division by zero")
+	}
+	return a / b, nil
+}
+
+func main() {
+	funcs := template.FuncMap{
+		"divide": safeDivide,
+	}
+
+	tmpl := `{{.a}} divided by {{.b}} is {{divide .a .b}}`
+
+	data := struct {
+		a float64
+		b float64
+	}{10, 0}
+
+	t, err := template.New("test").Funcs(funcs).Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		// 在此处处理模板执行时的错误
+		panic(err)
+	}
+}
+```
+
+由于除以零的操作，上述代码会引发一个 panic。
+
+### 86. 使用 ParseFiles 和 ParseGlob
+
+除了使用字符串定义模板，你还可以直接从文件或匹配的文件集加载模板。
+
+```go
+// 假设你有一个名为 "template.txt" 的文件，内容为："Hello, {{.Name}}!"
+
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	t, err := template.ParseFiles("template.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	data := struct {
+		Name string
+	}{"Alice"}
+
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+### 87. 将模板结果写入不同的输出
+
+默认情况下，模板的执行结果会写入 `os.Stdout`，但你也可以写入任何实现了 `io.Writer` 接口的对象。
+
+```go
+package main
+
+import (
+	"text/template"
+	"bytes"
+	"fmt"
+)
+
+func main() {
+	tmpl := `Hello, {{.Name}}!`
+
+	data := struct {
+		Name string
+	}{"Bob"}
+
+	var buf bytes.Buffer
+
+	t := template.Must(template.New("test").Parse(tmpl))
+	err := t.Execute(&buf, data)
+	if err != nil {
+		panic(err)
+	}
+
+	// 从缓冲区获取结果
+	result := buf.String()
+	fmt.Println(result)
+}
+```
+
+### 88. 处理日期和时间
+
+你可以在模板中处理日期和时间。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+	"time"
+)
+
+func main() {
+	funcs := template.FuncMap{
+		"formatDate": func(t time.Time) string {
+			return t.Format("2006-01-02")
+		},
+	}
+
+	tmpl := `Date: {{formatDate .Date}}`
+
+	data := struct {
+		Date time.Time
+	}{time.Now()}
+
+	t, err := template.New("test").Funcs(funcs).Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Date: 2023-08-14
+```
+
+### 89. 使用 and 和 or 运算符
+
+模板中可以使用 `and` 和 `or` 运算符来进行布尔逻辑操作。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{if and .HasBooks .HasPen}}You have both books and a pen.{{end}}
+{{if or .HasBooks .HasPen}}You have either books or a pen or both.{{end}}
+`
+
+	data := struct {
+		HasBooks bool
+		HasPen   bool
+	}{true, false}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+You have either books or a pen or both.
+```
+
+### 90. 使用 not 运算符
+
+你可以使用 `not` 运算符来反转布尔值。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{if not .HasBooks}}You don't have books.{{end}}
+`
+
+	data := struct {
+		HasBooks bool
+	}{false}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+You don't have books.
+```
+
+### 91. 使用 eq, ne, lt, le, gt, ge 运算符
+
+这些运算符分别代表等于、不等于、小于、小于或等于、大于和大于或等于。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{if eq .Age 30}}You are 30 years old.{{end}}
+{{if lt .Age 30}}You are younger than 30.{{end}}
+`
+
+	data := struct {
+		Age int
+	}{28}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+You are younger than 30.
+```
+
+### 92. 使用 slice 函数获取切片或字符串的子集
+
+`slice` 函数允许你获取切片或字符串的子集。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+Subslice: {{slice . 1 3}}
+`
+
+	data := []int{0, 1, 2, 3, 4}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Subslice: [1 2]
+```
+
+### 93. 使用自定义分隔符与管道结合
+
+你可以使用自定义的分隔符，并与管道结合使用。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+	"strings"
+)
+
+func main() {
+	funcs := template.FuncMap{
+		"upper": strings.ToUpper,
+	}
+
+	tmpl := `
+[[.Name | upper]]
+`
+
+	data := struct {
+		Name string
+	}{"alice"}
+
+	t, err := template.New("test").Funcs(funcs).Delims("[[", "]]").Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+ALICE
+```
+
+### 94. 使用 {{template}} 动作引用其他模板
+
+你可以使用 `{{template}}` 动作在一个模板中引用另一个模板。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{define "T1"}}Hello, {{.}}!{{end}}
+{{template "T1" .Name}}
+`
+
+	data := struct {
+		Name string
+	}{"Alice"}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Hello, Alice!
+```
+
+### 95. 使用 {{range}} 遍历映射
+
+之前，我们已经展示了如何使用 `{{range}}` 遍历切片。现在，我们来看一下如何遍历映射。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{range $key, $value := .Items}}
+Key: {{$key}}, Value: {{$value}}
+{{end}}
+`
+
+	data := struct {
+		Items map[string]string
+	}{
+		Items: map[string]string{
+			"A": "Apple",
+			"B": "Banana",
+		},
+	}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Key: A, Value: Apple
+Key: B, Value: Banana
+```
+
+### 96. 在管道中使用 if-else
+
+你可以在管道中使用条件逻辑。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{if .HasBooks}}
+You have {{.Books | len}} books.
+{{else}}
+You don't have any books.
+{{end}}
+`
+
+	data := struct {
+		HasBooks bool
+		Books    []string
+	}{true, []string{"Book1", "Book2"}}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+You have 2 books.
+```
+
+### 97. 在模板中使用 variable
+
+你可以在模板中定义和使用变量。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{ $x := "Hello" }}
+{{ $y := "World" }}
+{{ $x }} {{ $y }}
+`
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, nil)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Hello World
+```
+
+### 98. 使用 . 访问当前值
+
+在模板的动作中，`.` 表示当前值。例如，在 `range` 循环中，`.` 将代表当前的迭代项。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{range .}}
+Value: {{.}}
+{{end}}
+`
+
+	data := []string{"A", "B", "C"}
+
+	err := template.Must(template.New("test").Parse(tmpl)).Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Value: A
+Value: B
+Value: C
+```
+
+### 99. 使用 template 包中的 HTMLEscape
+
+`HTMLEscape` 函数可以帮助你转义 `HTML` 字符串，确保生成的内容在 Web 页面上正确显示。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+	"html"
+)
+
+func main() {
+	funcs := template.FuncMap{
+		"escape": html.EscapeString,
+	}
+
+	tmpl := `Escaped: {{escape .Content}}`
+
+	data := struct {
+		Content string
+	}{"<b>Hello</b>"}
+
+	t, err := template.New("test").Funcs(funcs).Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Escaped: &lt;b&gt;Hello&lt;/b&gt;
+```
+
+### 100. 使用 template 包中的 JSEscape
+
+与 `HTMLEscape` 类似，`JSEscape` 可以帮助你转义 `JavaScript` 字符串。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+	"html/template"
+)
+
+func main() {
+	tmpl := `Escaped: {{.Content | js}}`
+
+	data := struct {
+		Content string
+	}{"alert('Hello');"}
+
+	t, err := template.New("test").Funcs(template.FuncMap{
+		"js": template.JSEscapeString,
+	}).Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Escaped: alert(\x27Hello\x27);
+```
+
+### 101. 使用 Must 简化错误处理
+
+`template.Must` 是一个便捷函数，它可以简化模板解析中的错误处理。如果模板解析失败，`Must` 会产生 `panic`。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmplStr := "Hello, {{.Name}}!"
+	tmpl := template.Must(template.New("test").Parse(tmplStr))
+
+	data := struct {
+		Name string
+	}{"Alice"}
+
+	err := tmpl.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+Hello, Alice!
+```
+
+### 102. 使用 associate 关联数据
+
+`associate` 允许你将模板与特定的数据关联，这在嵌套模板中非常有用。
+
+```go
+package main
+
+import (
+	"text/template"
+	"os"
+)
+
+func main() {
+	tmpl := `
+{{define "A"}}{{.}}{{end}}
+{{define "B"}}{{with "World"}}{{template "A" .}}{{end}}{{end}}
+{{template "B" .}}
+`
+
+	data := "Hello"
+
+	t, err := template.New("test").Parse(tmpl)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(os.Stdout, data)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+输出：
+
+```
+World
+```
+
+Done.
