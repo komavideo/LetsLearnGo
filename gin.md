@@ -4009,3 +4009,205 @@ func main() {
 }
 ```
 
+### 139. 使用Gin的JWT中间件进行身份验证
+JSON Web Tokens（JWT）是一种流行的身份验证方法。你可以使用Gin的JWT中间件来简化身份验证。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/appleboy/gin-jwt/v2"
+	"time"
+)
+
+func main() {
+	r := gin.Default()
+
+	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
+		Realm:       "test zone",
+		Key:         []byte("secret key"),
+		Timeout:     time.Hour,
+		MaxRefresh:  time.Hour,
+		IdentityKey: "id",
+		PayloadFunc: func(data interface{}) jwt.MapClaims {
+			if v, ok := data.(*User); ok {
+				return jwt.MapClaims{
+					"id": v.Username,
+				}
+			}
+			return jwt.MapClaims{}
+		},
+		IdentityHandler: func(c *gin.Context) interface{} {
+			claims := jwt.ExtractClaims(c)
+			return &User{
+				Username: claims["id"].(string),
+			}
+		},
+		Authenticator: func(c *gin.Context) (interface{}, error) {
+			var loginVals User
+			if err := c.ShouldBind(&loginVals); err != nil {
+				return "", jwt.ErrMissingLoginValues
+			}
+			username := loginVals.Username
+			password := loginVals.Password
+
+			if username == "admin" && password == "admin" {
+				return &User{
+					Username: username,
+				}, nil
+			}
+
+			return nil, jwt.ErrFailedAuthentication
+		},
+		Authorizator: func(data interface{}, c *gin.Context) bool {
+			if v, ok := data.(*User); ok && v.Username == "admin" {
+				return true
+			}
+			return false
+		},
+		Unauthorized: func(c *gin.Context, code int, message string) {
+			c.JSON(code, gin.H{
+				"code":    code,
+				"message": message,
+			})
+		},
+	})
+
+	if err != nil {
+		log.Fatal("JWT Error:" + err.Error())
+	}
+
+	r.POST("/login", authMiddleware.LoginHandler)
+
+	auth := r.Group("/auth")
+	auth.Use(authMiddleware.MiddlewareFunc())
+	{
+		auth.GET("/refresh_token", authMiddleware.RefreshHandler)
+		auth.GET("/hello", helloHandler)
+	}
+
+	r.Run(":8080")
+}
+
+type User struct {
+	Username string `form:"username" json:"username" binding:"required"`
+	Password string `form:"password" json:"password" binding:"required"`
+}
+
+func helloHandler(c *gin.Context) {
+	claims := jwt.ExtractClaims(c)
+	user, _ := c.Get(jwt.IdentityKey)
+	c.JSON(200, gin.H{
+		"userID":   claims["id"],
+		"username": user.(*User).Username,
+		"text":     "Hello World.",
+	})
+}
+```
+
+### 140. 使用Gin自定义HTTP header
+你可以使用Gin为响应设置自定义的HTTP头。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/", func(c *gin.Context) {
+		c.Header("Custom-Header", "Some Value")
+		c.String(200, "Hello, World!")
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 141. 使用Gin的Last-Modified中间件
+你可以使用Gin的Last-Modified中间件来根据HTTP的 `If-Modified-Since` 头提供缓存。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"time"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/cache", func(c *gin.Context) {
+		c.Writer.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
+		c.String(200, "Hello, World!")
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 142. 使用Gin进行异步处理
+有时，你可能想在不影响主线程的情况下异步处理某些任务。你可以使用Gin的异步处理功能来实现。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"log"
+	"time"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/async", func(c *gin.Context) {
+		cCp := c.Copy()
+		go func() {
+			time.Sleep(5 * time.Second)
+
+			log.Println("Done! in path " + cCp.Request.URL.Path)
+		}()
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 143. 使用Gin的只读或只写中间件
+你可以使用Gin的中间件来限制特定路由只能读取或只能写入。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func ReadOnly(c *gin.Context) {
+	if c.Request.Method != "GET" {
+		c.JSON(403, gin.H{"message": "Method not allowed"})
+		c.Abort()
+	} else {
+		c.Next()
+	}
+}
+
+func main() {
+	r := gin.Default()
+
+	readOnlyGroup := r.Group("/readonly")
+	readOnlyGroup.Use(ReadOnly)
+	{
+		readOnlyGroup.GET("/hello", func(c *gin.Context) {
+			c.String(200, "Hello, World!")
+		})
+		readOnlyGroup.POST("/hello", func(c *gin.Context) {
+			c.String(200, "You shouldn't see this!")
+		})
+	}
+
+	r.Run(":8080")
+}
+```
