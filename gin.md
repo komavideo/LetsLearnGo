@@ -4211,3 +4211,212 @@ func main() {
 	r.Run(":8080")
 }
 ```
+
+### 144. 使用Gin处理WebSocket
+Gin可以和其他库一同工作来处理WebSocket连接。以下是一个与 `github.com/gorilla/websocket` 一起使用的示例：
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"net/http"
+)
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/ws", func(c *gin.Context) {
+		wshandler(c.Writer, c.Request)
+	})
+
+	r.Run(":8080")
+}
+
+func wshandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+
+	for {
+		messageType, p, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		if err := conn.WriteMessage(messageType, p); err != nil {
+			return
+		}
+	}
+}
+```
+
+### 145. 使用Gin进行文件下载
+Gin使文件下载变得非常简单。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/download", func(c *gin.Context) {
+		c.Writer.Header().Add("Content-Disposition", "attachment; filename=filename.txt")
+		c.File("./filename.txt")
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 146. 使用Gin自定义中间件的顺序
+你可以自定义中间件的执行顺序。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.New()
+
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+
+	r.Use(FirstMiddleware())
+	r.Use(SecondMiddleware())
+
+	r.GET("/", func(c *gin.Context) {
+		c.String(200, "Hello, World!")
+	})
+
+	r.Run(":8080")
+}
+
+func FirstMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 执行此中间件之前的代码...
+		c.Next()
+		// 执行此中间件之后的代码...
+	}
+}
+
+func SecondMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 执行此中间件之前的代码...
+		c.Next()
+		// 执行此中间件之后的代码...
+	}
+}
+```
+
+### 147. 使用Gin进行静态文件服务
+你可以使用Gin来为静态文件提供HTTP服务。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	r.Static("/assets", "./assets")
+
+	r.Run(":8080")
+}
+```
+
+### 148. 使用Gin进行HTTPS服务
+你可以使用Gin来提供HTTPS服务。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/", func(c *gin.Context) {
+		c.String(200, "Welcome to Gin HTTPS server")
+	})
+
+	// 你的证书和密钥的路径
+	r.RunTLS(":8080", "path_to_cert_file.crt", "path_to_key_file.key")
+}
+```
+
+### 149. 使用Gin的绑定查询字符串
+Gin支持绑定请求的查询字符串到Go的结构体。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+type Person struct {
+	Name    string `form:"name"`
+	Address string `form:"address"`
+}
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/welcome", func(c *gin.Context) {
+		var person Person
+		if c.ShouldBindQuery(&person) == nil {
+			c.JSON(http.StatusOK, gin.H{"name": person.Name, "address": person.Address})
+		}
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 150. 使用Gin的中间件进行CORS配置
+虽然我们之前提到了CORS中间件，但这次我们将详细配置CORS。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
+)
+
+func main() {
+	r := gin.Default()
+
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"https://example.com"}
+	config.AddAllowMethods("DELETE")
+	config.AddAllowHeaders("Authorization")
+
+	r.Use(cors.New(config))
+
+	r.GET("/", func(c *gin.Context) {
+		c.String(200, "Hello, World!")
+	})
+
+	r.Run(":8080")
+}
+```
+
+Done.
