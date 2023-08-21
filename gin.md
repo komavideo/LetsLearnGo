@@ -3814,3 +3814,198 @@ func main() {
 }
 ```
 
+### 133. 使用Gin进行路由的优雅重启
+为了在部署新版本时不中断服务，你可以使用优雅的重启来重新启动Gin服务器。
+
+```go
+package main
+
+import (
+	"context"
+	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/", func(c *gin.Context) {
+		c.String(200, "Welcome to Gin!")
+	})
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	// 等待中断信号来优雅地关闭服务器
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+
+	log.Println("Server exiting")
+}
+```
+
+### 134. 使用Gin的自定义HTTP错误响应
+你可以使用Gin为HTTP错误定义自定义响应。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/error", func(c *gin.Context) {
+		c.String(400, "Bad request")
+	})
+
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(404, gin.H{"message": "Not Found"})
+	})
+
+	r.NoMethod(func(c *gin.Context) {
+		c.JSON(405, gin.H{"message": "Method Not Allowed"})
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 135. 使用Gin的请求速率限制
+你可以使用中间件来为Gin设置请求速率限制。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/limiter"
+	"github.com/juju/ratelimit"
+	"time"
+)
+
+func main() {
+	r := gin.Default()
+
+	rate := ratelimit.NewBucketWithQuantum(time.Second, 5, 5)
+	r.Use(limiter.NewRateLimiter(func(c *gin.Context) string {
+		return c.ClientIP() // limit rate by client ip
+	}, rate, func(c *gin.Context) bool {
+		return false
+	}))
+
+	r.GET("/", func(c *gin.Context) {
+		c.String(200, "Welcome to Gin!")
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 136. 使用Gin的跨域资源共享（CORS）
+你可以使用Gin中的中间件来设置CORS。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.Use(cors.Default())
+
+	r.GET("/", func(c *gin.Context) {
+		c.String(200, "Welcome to Gin with CORS!")
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 137. 使用Gin进行JSON和XML渲染
+Gin支持JSON和XML渲染。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/json", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "Some JSON data."})
+	})
+
+	r.GET("/xml", func(c *gin.Context) {
+		c.XML(200, gin.H{"message": "Some XML data."})
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 138. 使用Gin的多种HTTP方法
+你可以使用Gin处理多种HTTP方法。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/get", func(c *gin.Context) {
+		c.String(200, "GET method")
+	})
+
+	r.POST("/post", func(c *gin.Context) {
+		c.String(200, "POST method")
+	})
+
+	r.PUT("/put", func(c *gin.Context) {
+		c.String(200, "PUT method")
+	})
+
+	r.DELETE("/delete", func(c *gin.Context) {
+		c.String(200, "DELETE method")
+	})
+
+	r.Run(":8080")
+}
+```
+
