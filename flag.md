@@ -1,4 +1,4 @@
-flag的使用
+使用flag库
 =========
 
 Go 的 flag 包主要用于解析命令行参数。
@@ -21,7 +21,7 @@ func main() {
 go run main.go
 ```
 
-## Go 语言 math 库
+## Go 语言 flag 库
 
 ### 1. 基础使用
 首先是如何定义一个简单的命令行标志。例如，我们可以定义一个布尔标志 `verbose` 和一个字符串标志 `color`。
@@ -196,4 +196,79 @@ Set flag: verbose Value: true
 Defined flag: color Default value: blue
 Defined flag: verbose Default value: false
 ```
+
+### 9. 使用 flag.Usage
+你可以通过设置 `flag.Usage` 自定义标志的使用说明。例如，当用户输入错误的标志或请求帮助时，可以显示这些说明。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+)
+
+func main() {
+	verbose := flag.Bool("verbose", false, "display verbose output")
+
+	// 自定义使用说明
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\nExample: %s -verbose\n", os.Args[0])
+	}
+
+	flag.Parse()
+
+	fmt.Println("Verbose:", *verbose)
+}
+```
+运行程序，请求帮助：
+```bash
+$ go run main.go -h
+Usage of main:
+  -verbose
+    	display verbose output
+Example: main -verbose
+```
+
+### 10. 解析环境变量
+虽然 `flag` 包专门用于解析命令行参数，但你可以结合环境变量来增强功能，以下是一个简单的例子：
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+)
+
+func main() {
+	// 从环境变量中读取默认值
+	defaultColor := os.Getenv("DEFAULT_COLOR")
+	if defaultColor == "" {
+		defaultColor = "blue"
+	}
+	color := flag.String("color", defaultColor, "set the color")
+
+	flag.Parse()
+
+	fmt.Println("Color:", *color)
+}
+```
+
+### 11. 结合其他库使用
+有一些第三方库可以与 `flag` 库结合使用，提供更多功能，例如支持子命令、更复杂的验证等。常见的库有 `cobra` 和 `kingpin`。如果你在寻找更高级的命令行工具或需要支持子命令，这些库可能会很有帮助。
+
+### 12. 注意事项
+当使用 `flag` 包时，有几点需要注意：
+
+`flag` 库解析的标志默认都是必需的。如果你需要一个可选标志，你需要为它提供一个默认值。
+
+
+当你定义了一个标志但在命令行中没有为其提供值时，该标志将使用默认值。
+
+`flag` 包不支持短标志（如 `-v`）和长标志（如 `--verbose`）的混合使用。你需要选择其中之一。
 
