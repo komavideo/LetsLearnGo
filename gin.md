@@ -3654,3 +3654,163 @@ func main() {
 }
 ```
 
+### 127. 使用Gin为特定路由设置不同的响应格式
+你可以为特定的路由设置不同的响应格式。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/json", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "Some JSON data."})
+	})
+
+	r.GET("/xml", func(c *gin.Context) {
+		c.XML(200, gin.H{"message": "Some XML data."})
+	})
+
+	r.GET("/yaml", func(c *gin.Context) {
+		c.YAML(200, gin.H{"message": "Some YAML data."})
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 128. 在Gin中设置HTTP Basic Authentication
+你可以使用Gin的内置函数为特定路由或路由组设置基本身份验证。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
+		"username": "password",
+	}))
+
+	authorized.GET("/admin", func(c *gin.Context) {
+		c.String(200, "Hello admin user!")
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 129. 在Gin中处理文件上传
+你可以使用Gin来处理文件上传并将其保存到服务器。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"log"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.POST("/upload", func(c *gin.Context) {
+		file, _ := c.FormFile("file")
+		log.Println(file.Filename)
+		c.SaveUploadedFile(file, "./" + file.Filename)
+		c.String(200, "File uploaded successfully!")
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 130. 使用Gin的数据验证
+你可以使用Gin的内置验证器进行数据验证。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+type Person struct {
+	Name    string `form:"name" binding:"required"`
+	Age     int    `form:"age" binding:"required,gt=0"`
+	Address string `form:"address" binding:"required"`
+}
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/person", func(c *gin.Context) {
+		var person Person
+		if err := c.ShouldBind(&person); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		c.String(200, "%v", person)
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 131. 使用Gin处理大量的路由
+Gin的路由性能非常高效，它可以轻松处理大量的路由。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	for i := 0; i < 1000; i++ {
+		r.GET("/ping"+string(i), func(c *gin.Context) {
+			c.String(200, "pong")
+		})
+	}
+
+	r.Run(":8080")
+}
+```
+
+### 132. 使用Gin的自定义中间件
+你可以创建自定义中间件来执行特定的任务。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"time"
+)
+
+func requestTime() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		c.Next()
+		latency := time.Since(start)
+		c.Writer.Header().Set("X-Request-Time", latency.String())
+	}
+}
+
+func main() {
+	r := gin.New()
+	r.Use(requestTime())
+
+	r.GET("/", func(c *gin.Context) {
+		c.String(200, "Hello, World!")
+	})
+
+	r.Run(":8080")
+}
+```
+
