@@ -3464,3 +3464,193 @@ func main() {
 }
 ```
 
+### 121. 使用Gin进行分组路由的认证
+你可以为特定的路由组添加认证。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func AuthRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.GetHeader("Authorization")
+		if token != "my-secret-token" {
+			c.JSON(401, gin.H{"error": "unauthorized"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
+func main() {
+	r := gin.Default()
+
+	private := r.Group("/private")
+	private.Use(AuthRequired())
+	{
+		private.GET("/profile", func(c *gin.Context) {
+			c.String(200, "Hello authorized user!")
+		})
+	}
+
+	r.Run(":8080")
+}
+```
+
+### 122. 使用Gin中间件记录请求和响应
+你可以使用中间件来记录请求和响应数据。
+
+```go
+package main
+
+import (
+	"bytes"
+	"github.com/gin-gonic/gin"
+	"io"
+	"io/ioutil"
+)
+
+func Logger() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		buf, _ := ioutil.ReadAll(c.Request.Body)
+		rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
+		rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+		// 使用rdr1进行读取操作
+		body, _ := ioutil.ReadAll(rdr1)
+		c.Request.Body = rdr2
+		c.Next()
+		response, _ := c.Get("response")
+		// 记录请求和响应
+		println("Request:", string(body))
+		println("Response:", response.(string))
+	}
+}
+
+func main() {
+	r := gin.Default()
+	r.Use(Logger())
+
+	r.POST("/test", func(c *gin.Context) {
+		response := gin.H{"hello": "world"}
+		c.Set("response", response)
+		c.JSON(200, response)
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 123. 使用Gin进行请求和响应的数据绑定
+Gin提供了简单的方法来绑定请求和响应的数据。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+type UserInput struct {
+	Username string `json:"username" binding:"required"`
+	Age      int    `json:"age"`
+}
+
+func main() {
+	r := gin.Default()
+
+	r.POST("/user", func(c *gin.Context) {
+		var input UserInput
+		if err := c.ShouldBindJSON(&input); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(200, gin.H{"user": input.Username, "age": input.Age})
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 124. 使用Gin生成URL
+你可以使用Gin的方法生成URL。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/post/:id", func(c *gin.Context) {
+		c.String(200, "Post ID: %s", c.Param("id"))
+	})
+
+	url := r.Group("/url")
+	{
+		url.GET("/generate", func(c *gin.Context) {
+			c.String(200, c.FullPath())
+		})
+	}
+
+	r.Run(":8080")
+}
+```
+
+### 125. 使用Gin的默认路由
+你可以为未匹配的路由设置默认响应。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/hello", func(c *gin.Context) {
+		c.String(200, "Hello World!")
+	})
+
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(404, gin.H{"message": "Not Found"})
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 126. 使用Gin的重定向路由
+你可以在Gin中设置重定向路由。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/old-path", func(c *gin.Context) {
+		c.Redirect(301, "/new-path")
+	})
+
+	r.GET("/new-path", func(c *gin.Context) {
+		c.String(200, "New Path")
+	})
+
+	r.Run(":8080")
+}
+```
+
