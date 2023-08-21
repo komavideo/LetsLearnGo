@@ -272,3 +272,106 @@ func main() {
 
 `flag` 包不支持短标志（如 `-v`）和长标志（如 `--verbose`）的混合使用。你需要选择其中之一。
 
+### 13. 参数顺序
+在 `flag` 包中，命令行参数的顺序是很重要的。标志必须在位置参数之前。例如，考虑以下程序：
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	verbose := flag.Bool("verbose", false, "display verbose output")
+	flag.Parse()
+
+	fmt.Println("Verbose:", *verbose)
+	fmt.Println("Remaining args:", flag.Args())
+}
+```
+以下是有效的命令行调用：
+```bash
+$ go run main.go -verbose file1 file2
+Verbose: true
+Remaining args: [file1 file2]
+```
+但是，将标志放在位置参数之后是无效的：
+```bash
+$ go run main.go file1 file2 -verbose
+```
+
+### 14. 使用-作为标志的值
+如果你需要传递一个值，该值以 `-` 开头（例如，一个负数），你可以使用 `--` 来标识标志的结束。这告诉 `flag` 包后面的内容都应该被视为参数，而不是标志。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	number := flag.Int("number", 0, "An integer")
+	flag.Parse()
+
+	fmt.Println("Number:", *number)
+	fmt.Println("Remaining args:", flag.Args())
+}
+```
+调用方式：
+```bash
+$ go run main.go -- -12345
+Number: 0
+Remaining args: [-12345]
+```
+
+### 15. flag.Shorthand
+虽然 `flag` 包本身不支持短标志和长标志的混合使用，但你可以使用两次 `flag` 函数调用来模拟这种行为。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	var verbose bool
+	flag.BoolVar(&verbose, "v", false, "display verbose output (shorthand)")
+	flag.BoolVar(&verbose, "verbose", false, "display verbose output")
+
+	flag.Parse()
+
+	fmt.Println("Verbose:", verbose)
+}
+```
+这样，`-v` 和 `--verbose` 都可以用来设置 `verbose` 标志。
+
+### 16. 解析未知的标志
+默认情况下，当你传递一个未知的标志时，`flag` 会输出一个错误并停止程序。但有时你可能想要处理这些未知标志。为此，你可以使用自定义的 `flag.ErrorHandling`。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	fs := flag.NewFlagSet("custom", flag.ContinueOnError)
+	verbose := fs.Bool("verbose", false, "display verbose output")
+
+	err := fs.Parse(os.Args[1:])
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+
+	fmt.Println("Verbose:", *verbose)
+}
+```
+这样，当你传递一个未知的标志时，程序不会立即退出，而是继续运行。
