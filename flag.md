@@ -375,3 +375,123 @@ func main() {
 }
 ```
 这样，当你传递一个未知的标志时，程序不会立即退出，而是继续运行。
+
+### 17. 标志的默认值
+当你定义一个标志时，可以为其设置一个默认值。如果在命令行中没有为该标志提供值，就会使用这个默认值。你可以使用各种 `flag` 函数（如 `String`, `Bool`, `Int` 等）的第二个参数来设置默认值。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	// 设置默认值为 "green"
+	color := flag.String("color", "green", "set the color")
+
+	flag.Parse()
+
+	fmt.Println("Color:", *color)
+}
+```
+
+### 18. flag.NFlag()
+`flag.NFlag()` 函数返回已设置的标志数量。这个函数可以帮助你了解用户在命令行中提供了多少个标志。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	verbose := flag.Bool("verbose", false, "display verbose output")
+	color := flag.String("color", "blue", "set the color")
+
+	flag.Parse()
+
+	fmt.Println("Number of flags set:", flag.NFlag())
+}
+```
+
+### 19. 将标志绑定到变量
+你可以使用 `flag.Var()` 函数将标志直接绑定到变量，而不是先定义一个指针，然后再解引用它。这在某些情况下可以使代码更加简洁。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	var verbose bool
+	flag.BoolVar(&verbose, "verbose", false, "display verbose output")
+
+	flag.Parse()
+
+	fmt.Println("Verbose:", verbose)
+}
+```
+
+### 20. 使用标志验证
+有时，你可能需要验证标志的值是否有效。可以在调用 `flag.Parse()` 后执行这些验证。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	color := flag.String("color", "blue", "set the color")
+
+	flag.Parse()
+
+	if *color != "blue" && *color != "red" && *color != "green" {
+		fmt.Println("Invalid color value")
+		return
+	}
+
+	fmt.Println("Color:", *color)
+}
+```
+
+### 21. 定义你自己的帮助消息
+虽然 `flag` 包提供了默认的帮助消息，但有时你可能想要提供自定义的帮助消息。你可以通过检查特定的标志（如 `-h` 或 `--help`）来实现这一点。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	help := flag.Bool("help", false, "display help message")
+	verbose := flag.Bool("verbose", false, "display verbose output")
+
+	flag.Parse()
+
+	if *help {
+		displayHelp()
+		return
+	}
+
+	fmt.Println("Verbose:", *verbose)
+}
+
+func displayHelp() {
+	fmt.Println("This is a custom help message for the application.")
+	fmt.Println("Available flags:")
+	flag.PrintDefaults()
+}
+```
