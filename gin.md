@@ -2943,12 +2943,524 @@ func main() {
 }
 ```
 
+### 101. 使用WebSockets与Gin
 
+你可以在Gin中集成WebSockets来实现双向通信。为此，可以使用 `golang/net/websocket` 库。
 
+https://pkg.go.dev/golang.org/x/net/websocket
 
+```go
+package main
 
+import (
+	"github.com/gin-gonic/gin"
+	"golang.org/x/net/websocket"
+)
 
+func main() {
+	r := gin.Default()
+	r.GET("/ws", func(c *gin.Context) {
+		handler := websocket.Handler(func(ws *websocket.Conn) {
+			defer ws.Close()
+			for {
+				// Echo the data received on the WebSocket
+				msg := make([]byte, 512)
+				n, err := ws.Read(msg)
+				if err != nil {
+					break
+				}
+				ws.Write(msg[:n])
+			}
+		})
+		handler.ServeHTTP(c.Writer, c.Request)
+	})
+	r.Run(":8080")
+}
+```
 
+### 102. 使用Gin上传多个文件
 
+在Gin中，你可以轻松处理多文件上传。
 
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"log"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.POST("/upload", func(c *gin.Context) {
+		form, _ := c.MultipartForm()
+		files := form.File["upload[]"]
+
+		for _, file := range files {
+			log.Println(file.Filename)
+			c.SaveUploadedFile(file, file.Filename)
+		}
+		c.String(200, "%d files uploaded!", len(files))
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 103. 使用Gin自定义HTTP2.0配置
+
+你可以使用Gin自定义HTTP/2.0的配置。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"golang.org/x/net/http2"
+	"net/http"
+)
+
+func main() {
+	r := gin.Default()
+
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+		TLSConfig: ... , // your TLS config
+	}
+	http2.ConfigureServer(server, &http2.Server{})
+
+	server.ListenAndServeTLS("path_to_tls.crt", "path_to_tls.key")
+}
+```
+
+### 104. 使用Gin的嵌套路由组
+
+在Gin中，你可以创建嵌套的路由组来更好地组织你的API。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	v1 := r.Group("/v1")
+	{
+		posts := v1.Group("/posts")
+		{
+			posts.GET("", listPosts)
+			posts.GET("/:id", getPost)
+		}
+	}
+
+	r.Run(":8080")
+}
+
+func listPosts(c *gin.Context) {
+	// List posts
+}
+
+func getPost(c *gin.Context) {
+	// Get a specific post
+}
+```
+
+### 105. 使用Gin限制请求主体大小
+
+你可以设置一个中间件来限制请求主体的大小。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+func MaxAllowed(n int64) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, n)
+		c.Next()
+	}
+}
+
+func main() {
+	r := gin.Default()
+	r.Use(MaxAllowed(2 * 1024 * 1024))  // 2 MB
+	r.POST("/upload", uploadHandler)
+	r.Run(":8080")
+}
+
+func uploadHandler(c *gin.Context) {
+	// Handle the upload
+}
+```
+
+### 106. 使用Gin处理文件下载
+
+Gin允许你方便地处理文件下载请求。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/download", func(c *gin.Context) {
+		c.File("/path/to/file")
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 107. 在Gin中使用模板函数
+
+使用模板函数可以在HTML模板中使用自定义逻辑。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"html/template"
+)
+
+func formatAsDate(t int64) string {
+	return "formatted date"
+}
+
+func main() {
+	r := gin.Default()
+	r.SetFuncMap(template.FuncMap{
+		"formatAsDate": formatAsDate,
+	})
+	r.LoadHTMLFiles("templates/template1.html", "templates/template2.html")
+
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(200, "template1.html", gin.H{
+			"myTime": time.Now().Unix(),
+		})
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 108. 使用静态文件中间件
+
+你可以使用Gin提供的中间件来服务静态文件。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.Static("/static", "./static_files")
+
+	r.Run(":8080")
+}
+```
+
+### 109. 使用Gin进行JSONP请求
+
+JSONP是一个请求技巧，允许跨域请求。Gin提供了对JSONP的内置支持。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/JSONP?callback=x", func(c *gin.Context) {
+		data := map[string]interface{}{
+			"foo": "bar",
+		}
+		c.JSONP(http.StatusOK, data)
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 110. 使用Gin的XML渲染
+
+除了JSON之外，Gin还支持XML响应。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/xml", func(c *gin.Context) {
+		c.XML(200, gin.H{"message": "hey", "status": http.StatusOK})
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 111. 使用Gin的AsciiJSON渲染
+
+有时，你可能想使用AsciiJSON作为响应。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/asciijson", func(c *gin.Context) {
+		data := map[string]interface{}{
+			"lang": "GO语言",
+			"tag":  "<br>",
+		}
+		c.AsciiJSON(200, data)
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 112. 使用Gin的纯文本渲染
+
+你可以使用Gin发送纯文本响应。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/text", func(c *gin.Context) {
+		c.String(200, "plain text")
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 113. 使用Gin的HTML渲染
+Gin允许你使用Go的模板语言渲染HTML页面。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	r.LoadHTMLGlob("templates/*")
+
+	r.GET("/index", func(c *gin.Context) {
+		c.HTML(200, "index.html", gin.H{
+			"title": "My Home Page",
+		})
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 114. 使用Gin的SecureCookie
+你可以使用Gin来创建和读取加密的cookies。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/cookie", func(c *gin.Context) {
+		// 设置加密的cookie
+		c.SetSecureCookie("gin_cookie", "cookie_name", "cookie_value", "/", "localhost", 86400, true, true)
+
+		// 读取加密的cookie
+		value, err := c.SecureCookie("gin_cookie", "cookie_name")
+		if err == nil {
+			c.String(200, "Cookie value: %s", value)
+		}
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 115. 使用Gin处理Multipart/Urlencoded表单
+你可以使用Gin来处理 `Multipart/Urlencoded` 形式的数据。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	r.POST("/form", func(c *gin.Context) {
+		message := c.PostForm("message")
+		nick := c.DefaultPostForm("nick", "anonymous")
+
+		c.JSON(200, gin.H{
+			"status":  "posted",
+			"message": message,
+			"nick":    nick,
+		})
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 116. 使用Gin的中间件绑定数据到结构体
+你可以使用Gin的中间件将请求数据绑定到结构体。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+type Login struct {
+	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
+	Password string `form:"password" json:"password" xml:"password" binding:"required"`
+}
+
+func main() {
+	r := gin.Default()
+
+	r.POST("/login", func(c *gin.Context) {
+		var login Login
+
+		if err := c.ShouldBind(&login); err == nil {
+			if login.User == "user" && login.Password == "password" {
+				c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
+			} else {
+				c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+			}
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 117. 使用Gin的重定向功能
+Gin使重定向变得非常简单。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/redirect", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "https://www.example.com/")
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 118. 使用Gin自定义HTTP响应
+你可以使用Gin自定义HTTP响应。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/response", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Hello, custom response!",
+		})
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 119. 使用Gin的路由参数
+Gin允许你在路由中使用参数。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/users/:name", func(c *gin.Context) {
+		name := c.Param("name")
+		c.String(http.StatusOK, "Hello %s", name)
+	})
+
+	r.Run(":8080")
+}
+```
+
+### 120. 使用Gin的路由通配符
+你可以使用通配符来捕获路由中的多个参数。
+
+```go
+package main
+
+import "github.com/gin-gonic/gin"
+
+func main() {
+	r := gin.Default()
+
+	r.GET("/files/*filepath", func(c *gin.Context) {
+		path := c.Param("filepath")
+		c.String(http.StatusOK, "You accessed path: %s", path)
+	})
+
+	r.Run(":8080")
+}
+```
 
