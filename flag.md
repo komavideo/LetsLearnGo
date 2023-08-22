@@ -591,3 +591,100 @@ func main() {
 }
 ```
 
+### 26. 使用flag.Set
+如果你想在代码中动态地为某个标志设置值，而不是从命令行获取，可以使用 `flag.Set` 函数。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	color := flag.String("color", "blue", "set the color")
+
+	// 在解析之前为 color 设置一个新值
+	flag.Set("color", "red")
+	flag.Parse()
+
+	fmt.Println("Color:", *color)
+}
+```
+
+### 27. flag.VisitAll vs flag.Visit
+我们之前提到了 `flag.VisitAll` 和 `flag.Visit`。这两个函数都接受一个函数作为参数，该函数会应用于每个标志。但它们的差异在于：
+
++ `flag.VisitAll` 遍历所有定义的标志，无论它们是否在命令行中设置了值。
++ `flag.Visit` 仅遍历在命令行中设置了值的标志。
+
+### 28. 解析自定义的参数列表
+虽然默认情况下 `flag` 包会解析 `os.Args`，但你可以为其提供一个自定义的参数列表。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	color := flag.String("color", "blue", "set the color")
+
+	args := []string{"-color=green"}
+	flag.CommandLine.Parse(args)
+
+	fmt.Println("Color:", *color)
+}
+```
+
+### 29. 检测标志是否被设置
+有时，你可能想知道一个标志是否在命令行中被明确设置，而不只是使用了默认值。这可以通过 `flag.Visit` 或 `flag.Lookup` 实现。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	color := flag.String("color", "blue", "set the color")
+	flag.Parse()
+
+	if flag := flag.Lookup("color"); flag != nil && flag.Value.String() != flag.DefValue {
+		fmt.Println("Color was explicitly set to:", *color)
+	} else {
+		fmt.Println("Using default color:", *color)
+	}
+}
+```
+
+### 30. 使用-作为标志名
+在某些命令行工具中，`-` 用作标准输入的占位符。虽然 `flag` 包不直接支持这一点，但你可以检查 `flag.Args()` 中是否存在 -，并据此采取行动。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	flag.Parse()
+	args := flag.Args()
+
+	for _, arg := range args {
+		if arg == "-" {
+			fmt.Println("Read from standard input!")
+		} else {
+			fmt.Println("Filename:", arg)
+		}
+	}
+}
+```
+
