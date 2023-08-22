@@ -215,3 +215,93 @@ e.GET("/ws", func(c echo.Context) error {
 })
 ```
 
+### 错误处理
+`Echo` 提供了一个中央化的错误处理机制，它对 `HTTP` 错误和自定义错误都很友好：
+
+```go
+e.HTTPErrorHandler = func(err error, c echo.Context) {
+	code := http.StatusInternalServerError
+	if he, ok := err.(*echo.HTTPError); ok {
+		code = he.Code
+	}
+	c.Logger().Error(err)
+	c.String(code, http.StatusText(code))
+}
+```
+
+### 重定向
+`Echo` 使重定向变得容易：
+
+```go
+e.GET("/old", func(c echo.Context) error {
+	return c.Redirect(http.StatusMovedPermanently, "/new")
+})
+```
+
+### 组中间件
+你可以为特定的路由组添加中间件：
+
+```go
+admin := e.Group("/admin", middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+	if username == "admin" && password == "password" {
+		return true, nil
+	}
+	return false, nil
+}))
+
+admin.GET("/dashboard", func(c echo.Context) error {
+	return c.String(http.StatusOK, "Admin Dashboard")
+})
+```
+
+### 请求预处理
+`Echo` 允许你拦截请求并对其进行预处理：
+
+```go
+e.Pre(middleware.RemoveTrailingSlash())
+```
+
+### 扩展绑定
+`Echo` 默认使用 `net/http` 的 `Request.ParseForm()` 进行绑定。但是，你可以扩展它以支持自定义数据源或绑定机制：
+
+```go
+type CustomBinder struct{}
+
+func (cb *CustomBinder) Bind(i interface{}, c echo.Context) (err error) {
+	// 你的自定义绑定逻辑
+	return
+}
+
+e.Binder = &CustomBinder{}
+```
+
+### 自定义验证
+`Echo` 默认使用 `go-playground/validator` 进行验证，但你可以替换它以支持自定义验证器：
+
+```go
+type CustomValidator struct{}
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	// 你的自定义验证逻辑
+	return nil
+}
+
+e.Validator = &CustomValidator{}
+```
+
+### 子域名路由
+你可以为特定子域名创建路由，这在多租户应用中非常有用：
+
+```go
+e.GET("/", func(c echo.Context) error {
+	return c.String(http.StatusOK, "Welcome to Echo!")
+})
+
+admin := e.Group("admin.")
+admin.GET("/", func(c echo.Context) error {
+	return c.String(http.StatusOK, "Welcome to Admin!")
+})
+```
+这样，对于 `example.com` 的请求会返回 `"Welcome to Echo!"`，而对于 `admin.example.com` 的请求会返回 `"Welcome to Admin!"`。
+
+
