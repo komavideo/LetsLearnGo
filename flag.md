@@ -495,3 +495,99 @@ func displayHelp() {
 	flag.PrintDefaults()
 }
 ```
+
+### 22. 与 os.Args 交互
+`os.Args` 是一个包含原始命令行参数的字符串切片。`os.Args[0]` 是程序的名称，其余是传递给程序的参数。与 `flag.Args()` 不同， `os.Args` 包含标志和它们的值。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+)
+
+func main() {
+	flag.Parse()
+
+	fmt.Println("os.Args:", os.Args)
+	fmt.Println("flag.Args():", flag.Args())
+}
+```
+
+### 23. 使用 flag.Lookup
+`flag.Lookup` 函数可以用于检索已定义的标志。这允许你在其他地方访问或修改标志的属性。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	color := flag.String("color", "blue", "set the color")
+	flag.Parse()
+
+	f := flag.Lookup("color")
+	if f != nil {
+		fmt.Println("Flag 'color' description:", f.Usage)
+		fmt.Println("Flag 'color' value:", *color)
+	}
+}
+```
+
+### 24. 定义标志的持续时间
+`flag` 包为时间持续时间定义了一个特殊的标志类型。这可以用于解析像 `"5s"` 或 `"3m"` 这样的时间表示。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"time"
+)
+
+func main() {
+	duration := flag.Duration("interval", 1*time.Second, "time interval")
+
+	flag.Parse()
+
+	fmt.Printf("Interval: %v\n", *duration)
+}
+```
+调用：
+```bash
+$ go run main.go -interval=2m30s
+Interval: 2m30s
+```
+
+### 25. 重置所有标志
+有时，你可能需要在程序运行期间多次解析标志。在这种情况下，你可以使用 `flag.CommandLine` 来重置所有的标志。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	verbose := flag.Bool("verbose", false, "display verbose output")
+	flag.Parse()
+
+	fmt.Println("First run, Verbose:", *verbose)
+
+	// 重置所有标志
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	verbose2 := flag.Bool("verbose", false, "display verbose output")
+
+	flag.Parse()
+	fmt.Println("Second run, Verbose:", *verbose2)
+}
+```
+
