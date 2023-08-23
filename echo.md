@@ -624,3 +624,219 @@ e.POST("/users", func(c echo.Context) error {
 })
 ```
 
+### 中间件使用顺序
+中间件的执行顺序在 `Echo` 中是非常重要的。例如：
+
+```go
+e.Use(middleware.Logger())
+e.Use(middleware.Recover())
+```
+在上述代码中，`Logger` 中间件将在 `Recover` 中间件之前运行。这意味着如果你的应用崩溃，`Logger` 将不会记录该请求，因为它发生在恢复之前。所以要注意中间件的顺序。
+
+### JWT 认证
+`Echo` 和 `JWT (JSON Web Tokens)` 之间有一个内置的集成。以下是如何使用 `JWT` 进行认证的示例：
+
+```go
+e.GET("/restricted", handleRestricted, middleware.JWTWithConfig(middleware.JWTConfig{
+    SigningKey: []byte("secret"),
+}))
+```
+
+### CORS
+跨域资源共享 (CORS) 是一个重要的安全特性，`Echo` 为此提供了中间件：
+
+```go
+e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+    AllowOrigins: []string{"https://example.com"},
+    AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
+}))
+```
+
+### 请求限制
+为了避免滥用或攻击，可以使用 `Echo` 的 `RateLimiter` 中间件：
+
+```go
+store := middleware.NewRateLimiterMemoryStore(50)
+e.Use(middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{
+    Store: store,
+}))
+```
+
+### 压缩响应内容
+你可以使用中间件自动压缩 `HTTP` 响应内容：
+
+```go
+e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+    Level: 5,
+}))
+```
+
+### 请求跟踪
+可以为每个请求生成一个唯一ID，便于跟踪和日志记录：
+
+```go
+e.Use(middleware.RequestID())
+```
+
+### 重定向
+`Echo` 提供了方便的方法来执行重定向：
+
+```go
+e.GET("/old", func(c echo.Context) error {
+    return c.Redirect(http.StatusMovedPermanently, "/new")
+})
+```
+
+### 自定义 HTTP 错误
+你可以自定义 HTTP 错误的处理方法：
+
+```go
+e.HTTPErrorHandler = func(err error, c echo.Context) {
+    code := http.StatusInternalServerError
+    if he, ok := err.(*echo.HTTPError); ok {
+        code = he.Code
+    }
+    errorPage := fmt.Sprintf("%d.html", code)
+    c.File(errorPage)
+}
+```
+
+### 连接数据库
+尽管 `Echo` 本身不提供数据库连接功能，但它可以很容易地与像 `GORM` 这样的库集成，来实现完整的数据库操作。
+
+### 扩展性
+`Echo` 的设计允许你轻松地扩展和添加自己的中间件、模板引擎或其他组件。这意味着你可以根据项目的特定需求定制 `Echo`。
+
+### 处理请求体大小
+为了防止潜在的拒绝服务攻击，你可以限制请求体的大小：
+
+```go
+e.Use(middleware.BodyLimit("2M"))
+```
+上述中间件将限制所有请求体的大小为2MB。
+
+### 处理多部分请求
+如果你的应用需要处理如文件上传之类的多部分请求，`Echo` 提供了便捷的API来处理它们：
+
+```go
+e.POST("/upload", func(c echo.Context) error {
+    form, err := c.MultipartForm()
+    if err != nil {
+        return err
+    }
+    files := form.File["files"]
+    for _, file := range files {
+        dst := fmt.Sprintf("/tmp/%s", file.Filename)
+        if err := c.SaveUploadedFile(file, dst); err != nil {
+            return err
+        }
+    }
+    return c.HTML(http.StatusOK, "Files uploaded successfully!")
+})
+```
+
+### 中间件函数的定义
+你可以定义自己的中间件函数并将它们与应用程序集成。以下是如何定义并使用一个简单的中间件的示例：
+
+```go
+func SetCustomHeader(next echo.HandlerFunc) echo.HandlerFunc {
+    return func(c echo.Context) error {
+        c.Response().Header().Set("X-Custom-Header", "MyValue")
+        return next(c)
+    }
+}
+
+e.Use(SetCustomHeader)
+```
+
+### 请求后的钩子
+有时，你可能希望在请求完成后执行某些操作。这可以使用 `Echo` 的 `After` 方法来实现：
+
+```go
+e.After(func(c echo.Context) {
+    log.Printf("After request: %v", c.Path())
+})
+```
+
+### 嵌套组
+你可以在 `Echo` 中嵌套组来组织路由：
+
+```go
+adminGroup := e.Group("/admin")
+v1Group := adminGroup.Group("/v1")
+v1Group.GET("/users", getUserList)
+```
+
+### 自定义上下文
+要在 `Echo` 的上下文中添加自己的方法或字段，你可以定义一个自己的上下文类型，并使用 `HideContext` 和 `Wrap` 方法来包装原始的上下文：
+
+```go
+type CustomContext struct {
+    echo.Context
+}
+
+func (c *CustomContext) MyCustomMethod() string {
+    return "This is custom!"
+}
+
+e.HideContext()
+e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+    return func(c echo.Context) error {
+        cc := &CustomContext{c}
+        return next(cc)
+    }
+})
+
+e.GET("/custom", func(c echo.Context) error {
+    cc := c.(*CustomContext)
+    return c.String(http.StatusOK, cc.MyCustomMethod())
+})
+```
+
+### 安全中间件
+`Echo` 提供了一个内置的安全中间件，用于增加安全性，如内容安全策略、`XSS` 保护等：
+
+```go
+e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
+    XSSProtection: "1; mode=block",
+}))
+```
+
+### 自定义绑定器
+如果需要，你可以实现自己的请求数据绑定逻辑：
+
+```go
+type MyBinder struct{}
+
+func (b *MyBinder) Bind(i interface{}, c echo.Context) error {
+    // Your custom binding logic here
+    return nil
+}
+
+e.Binder = &MyBinder{}
+```
+
+### 集成 OpenTracing
+`Echo` 可以与 `OpenTracing` 集成，提供请求的跟踪信息，这对于分析和监控生产环境的性能非常有用。
+
+### 优雅地关闭
+你可以优雅地关闭 `Echo` 服务，确保所有正在处理的请求都被适当地完成：
+
+```go
+go func() {
+    if err := e.Start(":8080"); err != nil && err != http.ErrServerClosed {
+        e.Logger.Fatal("shutting down the server")
+    }
+}()
+
+quit := make(chan os.Signal, 1)
+signal.Notify(quit, os.Interrupt)
+<-quit
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+if err := e.Shutdown(ctx); err != nil {
+    e.Logger.Fatal(err)
+}
+```
+
+Done.
