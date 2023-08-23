@@ -534,4 +534,93 @@ e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
 e.Logger.Fatal(e.StartAutoTLS(":443"))
 ```
 
+### 静态文件服务
+`Echo` 提供了方便的方法来为静态文件提供 `HTTP` 服务。以下是一个简单示例：
+
+```go
+e.Static("/static", "assets")
+```
+这行代码将会为 `"assets"` 目录中的文件提供 `HTTP` 服务，可以通过 `"/static"` 路径来访问。
+
+### 模板渲染
+`Echo` 支持任何实现了 `http/template` 接口的模板引擎。下面是如何使用 `Go` 的内置模板引擎：
+
+```go
+e.Renderer = &TemplateRenderer{
+    templates: template.Must(template.ParseGlob("views/*.html")),
+}
+
+type TemplateRenderer struct {
+    templates *template.Template
+}
+
+func (t *TemplateRenderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+    return t.templates.ExecuteTemplate(w, name, data)
+}
+
+e.GET("/hello", func(c echo.Context) error {
+    return c.Render(http.StatusOK, "hello", "World")
+})
+```
+上述代码将渲染一个位于 `"views"` 目录下名为 `"hello.html"` 的模板文件。
+
+### WebSockets
+`Echo` 有内置的支持简化 `WebSockets` 的使用：
+
+```go
+e.GET("/ws", func(c echo.Context) error {
+    ws, err := websocket.Upgrade(c.Response(), c.Request(), nil, 1024, 1024)
+    if err != nil {
+        return err
+    }
+    defer ws.Close()
+
+    for {
+        mt, msg, err := ws.ReadMessage()
+        if err != nil {
+            return err
+        }
+        if err = ws.WriteMessage(mt, msg); err != nil {
+            return err
+        }
+    }
+})
+```
+这是一个简单的 `echo` 服务器，它会将接收到的 `WebSocket` 消息发送回客户端。
+
+### HTTP/2 和 Server Push
+`Echo` 支持 `HTTP/2`，并允许你使用 `server push` 功能：
+
+```go
+e.GET("/", func(c echo.Context) error {
+    pusher, ok := c.Response().Writer.(http.Pusher)
+    if ok {
+        if err := pusher.Push("/app.js", nil); err != nil {
+            return err
+        }
+    }
+    return c.File("index.html")
+})
+```
+
+### 请求数据绑定和验证
+`Echo` 提供了数据绑定和验证的功能，这有助于简化和加速开发过程：
+
+```go
+type User struct {
+    Name  string `json:"name" validate:"required"`
+    Email string `json:"email" validate:"required,email"`
+}
+
+e.POST("/users", func(c echo.Context) error {
+    user := &User{}
+    if err := c.Bind(user); err != nil {
+        return err
+    }
+    if err := c.Validate(user); err != nil {
+        return err
+    }
+    return c.JSON(http.StatusOK, user)
+})
+```
 
