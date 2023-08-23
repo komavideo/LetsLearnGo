@@ -427,3 +427,111 @@ if err := e.Shutdown(ctx); err != nil {
 }
 ```
 
+### 参数验证
+`Echo` 与 `go-playground` 的 `validator` 集成得很好，可以帮助你验证请求参数：
+
+```go
+type User struct {
+	Name  string `json:"name" validate:"required"`
+	Email string `json:"email" validate:"required,email"`
+}
+
+e.POST("/users", func(c echo.Context) error {
+	u := new(User)
+	if err := c.Bind(u); err != nil {
+		return err
+	}
+	if err := c.Validate(u); err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, u)
+})
+```
+
+### 路径参数
+`Echo` 支持命名的路径参数，例如：
+
+```go
+e.GET("/users/:id", func(c echo.Context) error {
+	id := c.Param("id")
+	return c.String(http.StatusOK, "User ID: "+id)
+})
+```
+
+### 路径通配符
+可以使用通配符匹配多个路径：
+
+```go
+e.GET("/files/*", func(c echo.Context) error {
+	path := c.Param("*")
+	return c.String(http.StatusOK, "File path: "+path)
+})
+```
+
+### 自定义数据绑定
+要为特定的 `MIME` 类型实现自定义绑定器：
+
+```go
+e.Binder = &CustomBinder{}
+
+type CustomBinder struct{}
+
+func (cb *CustomBinder) Bind(i interface{}, c echo.Context) (err error) {
+	if c.Request().Header.Get(echo.HeaderContentType) == "application/custom" {
+		// Your custom binding logic
+	}
+	return echo.DefaultBinder{}.Bind(i, c)
+}
+```
+
+### 数据解组
+除了默认的 `JSON` 和 `XML` 解组，`Echo` 还支持 `msgpack`, `protobuf` 等，只需导入相应的包：
+
+```go
+import (
+	_ "github.com/labstack/echo/v4/middleware"
+)
+
+e.GET("/users/:id", func(c echo.Context) error {
+	u := &User{}
+	return c.JSON(http.StatusOK, u)
+})
+```
+
+### 响应格式化
+你可以将数据格式化为你想要的任何格式：
+
+```go
+e.GET("/users/:id", func(c echo.Context) error {
+	u := &User{}
+	return c.Render(http.StatusOK, "user", u)
+})
+```
+
+### 封装请求和响应
+`Echo` 允许你封装请求和响应对象，以便可以添加自定义方法或字段：
+
+```go
+type CustomResponseWriter struct {
+	echo.ResponseWriter
+}
+
+func (rw *CustomResponseWriter) WriteHeader(code int) {
+	rw.ResponseWriter.WriteHeader(code)
+	// Custom logic here
+}
+
+e.Response().Wrap(func(w http.ResponseWriter) http.ResponseWriter {
+	return &CustomResponseWriter{w}
+})
+```
+
+### 自动 TLS
+`Echo` 可以使用 `Let's Encrypt` 自动管理 `TLS` 证书：
+
+```go
+e.AutoTLSManager.Cache = autocert.DirCache("/var/www/.cache")
+e.Logger.Fatal(e.StartAutoTLS(":443"))
+```
+
+
