@@ -304,4 +304,126 @@ admin.GET("/", func(c echo.Context) error {
 ```
 这样，对于 `example.com` 的请求会返回 `"Welcome to Echo!"`，而对于 `admin.example.com` 的请求会返回 `"Welcome to Admin!"`。
 
+### 自定义 HTTP 上下文
+你可以扩展 `Echo` 的上下文来添加自定义方法或字段：
+
+```go
+type CustomContext struct {
+	echo.Context
+}
+
+func (c *CustomContext) Foo() {
+	// 自定义方法
+}
+
+e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cc := &CustomContext{c}
+		return next(cc)
+	}
+})
+```
+
+### 请求钩子
+你可以为特定的路由注册一个钩子，以在路由执行前后运行特定的代码：
+
+```go
+e.GET("/", func(c echo.Context) error {
+	return c.String(http.StatusOK, "Hello, Echo!")
+}).Before(func(c echo.Context) {
+	// 在路由处理之前执行的代码
+}).After(func(c echo.Context) {
+	// 在路由处理之后执行的代码
+})
+```
+
+### 自定义日志
+默认情况下，`Echo` 使用其内置的日志机制，但你可以使用自己的日志实现：
+
+```go
+type CustomLogger struct{}
+
+func (l *CustomLogger) Output() io.Writer {
+	// 你的实现
+	return os.Stdout
+}
+
+func (l *CustomLogger) SetOutput(w io.Writer) {
+	// 你的实现
+}
+
+func (l *CustomLogger) Prefix() string {
+	// 你的实现
+	return ""
+}
+
+func (l *CustomLogger) SetPrefix(p string) {
+	// 你的实现
+}
+
+func (l *CustomLogger) Level() echo.LogLevel {
+	// 你的实现
+	return echo.INFO
+}
+
+func (l *CustomLogger) SetLevel(v echo.LogLevel) {
+	// 你的实现
+}
+
+func (l *CustomLogger) Print(i ...interface{}) {
+	// 你的实现
+	fmt.Println(i...)
+}
+
+func (l *CustomLogger) Printf(format string, args ...interface{}) {
+	// 你的实现
+	fmt.Printf(format, args...)
+}
+
+// 同样，你还需要实现其他的日志方法，如 Printj, Debug, Info 等...
+
+e.Logger = &CustomLogger{}
+```
+
+### 内建测试助手
+`Echo` 提供了一个简单的 `API` 来帮助你测试你的 `HTTP` 服务：
+
+```go
+e.GET("/something", func(c echo.Context) error {
+	return c.String(http.StatusOK, "Hello, Test!")
+})
+
+req := httptest.NewRequest(http.MethodGet, "/something", nil)
+rec := httptest.NewRecorder()
+e.ServeHTTP(rec, req)
+assert.Equal(t, http.StatusOK, rec.Code)
+assert.Equal(t, "Hello, Test!", rec.Body.String())
+```
+
+### GRPC 支持
+`Echo` 可以很容易地与 `gRPC` 服务集成。虽然这超出了简单示例的范围，但你可以查看官方文档或相关教程来深入学习如何将 `Echo` 与 `gRPC` 服务集成。
+
+### 优雅地关闭或重启
+`Echo` 提供了优雅地关闭或重启你的 `HTTP` 服务器的功能：
+
+```go
+e.Server.Addr = ":8080"
+
+// Start server
+go func() {
+	if err := e.Start(":8080"); err != nil {
+		e.Logger.Info("Shutting down the server")
+	}
+}()
+
+// Wait for interrupt signal to gracefully shut down the server
+quit := make(chan os.Signal)
+signal.Notify(quit, os.Interrupt)
+<-quit
+ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+defer cancel()
+if err := e.Shutdown(ctx); err != nil {
+	e.Logger.Fatal(err)
+}
+```
 
