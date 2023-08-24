@@ -1161,3 +1161,128 @@ func main() {
 }
 ```
 
+### 51. 使用自定义用法消息的标志
+你可以为每个标志定义自己的用法字符串，但有时你可能想完全覆盖由 `-h` 或 `-help` 标志生成的默认消息。你可以通过设置 `flag.Usage` 变量来实现这一点。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func customUsage() {
+	fmt.Printf("Usage of %s:\n", "my-program")
+	fmt.Println("  -color string")
+	fmt.Println("        set the color (default \"blue\")")
+}
+
+func main() {
+	flag.Usage = customUsage
+
+	color := flag.String("color", "blue", "set the color")
+	flag.Parse()
+
+	fmt.Println("Color:", *color)
+}
+```
+
+### 52. 使用持续时间切片
+虽然 `flag` 包为持续时间提供了一个特殊的标志类型，但如果你想为多个持续时间使用一个标志，则需要自定义一个值。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"strings"
+	"time"
+)
+
+type durationList []time.Duration
+
+func (d *durationList) String() string {
+	return fmt.Sprintf("%v", *d)
+}
+
+func (d *durationList) Set(value string) error {
+	values := strings.Split(value, ",")
+	for _, v := range values {
+		duration, err := time.ParseDuration(v)
+		if err != nil {
+			return err
+		}
+		*d = append(*d, duration)
+	}
+	return nil
+}
+
+func main() {
+	var durations durationList
+	flag.Var(&durations, "durations", "Comma-separated list of durations")
+	flag.Parse()
+
+	fmt.Printf("Durations: %v\n", durations)
+}
+```
+
+### 53. 多次调用 flag.Parse
+默认情况下，`flag.Parse` 仅解析命令行参数一次。但在某些情况下，你可能希望能够多次调用它。为了实现这一点，你需要使用 `flag.NewFlagSet` 创建新的 `FlagSet`。
+
+### 54. 解析环境变量
+虽然 `flag` 包主要用于解析命令行参数，但有时你可能还想从环境变量中读取配置。这可以通过组合 `os.Getenv` 和 `flag` 来实现。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+)
+
+func main() {
+	var path string
+
+	flag.StringVar(&path, "path", os.Getenv("PATH"), "path to directory")
+	flag.Parse()
+
+	fmt.Println("Path:", path)
+}
+```
+
+### 55. 定义嵌套的标志
+当处理复杂的命令行工具时，你可能希望支持嵌套的子命令和标志。这可以通过组合 `flag.NewFlagSet` 来实现。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	fs := flag.NewFlagSet("main", flag.ExitOnError)
+	verbose := fs.Bool("verbose", false, "display verbose output")
+
+	command := ""
+	if len(os.Args) > 1 {
+		command = os.Args[1]
+	}
+
+	switch command {
+	case "command1":
+		cmd1Flag := fs.String("cmd1Flag", "", "flag for command1")
+		fs.Parse(os.Args[2:])
+		fmt.Println("Command1 flag:", *cmd1Flag)
+	default:
+		fs.Parse(os.Args[1:])
+	}
+
+	fmt.Println("Main verbose:", *verbose)
+}
+```
+
