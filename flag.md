@@ -1286,3 +1286,84 @@ func main() {
 }
 ```
 
+### 56. flag 包与其他 CLI 库的比较
+虽然 `flag` 包是 `Go` 标准库中的一个强大工具，但还有其他第三方库提供更多的特性，如子命令支持、更好的帮助消息格式化等。例如，`cobra` 和 `cli` 库是 `Go` 社区中两个非常流行的命令行工具库。
+
+### 57. 根据标志值更改程序的行为
+你可以基于已设置的标志值来更改程序的行为。这使你可以轻松地实现条件逻辑。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	verbose := flag.Bool("verbose", false, "display verbose output")
+	flag.Parse()
+
+	if *verbose {
+		fmt.Println("Verbose mode is enabled.")
+	}
+
+	fmt.Println("Program is running...")
+}
+```
+
+### 58. 使用 flag 测试命令行程序
+你可以使用 `flag` 包和 `Go` 的 `testing` 包来测试命令行程序。`flag` 包可以用于模拟命令行参数，而 `testing` 包可以用于编写测试用例。
+
+### 59. 获取所有已设置的标志
+使用 `flag.Visit` 函数，你可以获取已经在命令行中设置的所有标志。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	color := flag.String("color", "blue", "set the color")
+	verbose := flag.Bool("verbose", false, "display verbose output")
+
+	flag.Parse()
+
+	flag.Visit(func(f *flag.Flag) {
+		fmt.Printf("Flag set: %s, Value: %v\n", f.Name, f.Value)
+	})
+
+	if *verbose {
+		fmt.Println("Verbose mode is enabled.")
+	}
+	fmt.Println("Color set to:", *color)
+}
+```
+
+### 60. 使用 flag.ShorthandLookup 查询简写标志
+如果你有一个标志的简写版本，例如 `-v` 作为 `--verbose` 的简写，你可以使用 `flag.ShorthandLookup` 来查询它。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	verbose := flag.Bool("v", false, "display verbose output (shorthand for --verbose)")
+	flag.Bool("verbose", false, "display verbose output")
+
+	flag.Parse()
+
+	if f := flag.Lookup("v"); f != nil {
+		fmt.Println("-v shorthand is set to:", *verbose)
+	}
+}
+```
+
+Done.
