@@ -8,6 +8,7 @@
 + [模块化编程 module](/module.md)
 + [处理json数据](/json.md)
 + [使用flag库](/flag.md)
++ [使用fmt库](fmt.md)
 + [使用log库](/log.md)
 + [使用math库](/math.md)
 + [使用os库](/os.md)
