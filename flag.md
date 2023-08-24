@@ -806,3 +806,138 @@ func main() {
 }
 ```
 
+### 36. 处理重复的标志
+虽然 `flag` 包本身并不直接支持处理多次提供的同一个标志，但你可以通过定义自定义类型来处理这种情况。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"strings"
+)
+
+type arrayFlags []string
+
+func (i *arrayFlags) String() string {
+	return strings.Join(*i, ", ")
+}
+
+func (i *arrayFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
+func main() {
+	var myFlags arrayFlags
+	flag.Var(&myFlags, "list", "Some comma separated values")
+
+	flag.Parse()
+
+	fmt.Println("List:", myFlags)
+}
+```
+运行程序：
+```bah
+$ go run main.go -list=value1 -list=value2
+List: value1, value2
+```
+
+### 37. 使用 flag.Parsed
+你可以使用 `flag.Parsed()` 函数来检查是否已经调用了 `flag.Parse()`。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	if !flag.Parsed() {
+		flag.Parse()
+	}
+
+	fmt.Println("Flags have been parsed!")
+}
+```
+
+### 38. 使用环境变量作为标志的默认值
+我们之前提到了如何从环境变量中获取默认值。这里是一个更完整的例子，展示如何结合环境变量和命令行标志。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+)
+
+func main() {
+	defaultColor := os.Getenv("DEFAULT_COLOR")
+	if defaultColor == "" {
+		defaultColor = "blue"
+	}
+
+	color := flag.String("color", defaultColor, "set the color")
+
+	flag.Parse()
+
+	fmt.Println("Color:", *color)
+}
+```
+
+### 39. 使用 flag.Args 获取所有非标志参数
+`flag.Args()` 函数返回一个字符串切片，其中包含所有非标志参数。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	flag.Parse()
+
+	for _, arg := range flag.Args() {
+		fmt.Println(arg)
+	}
+}
+```
+
+### 40. 在自定义用法消息中包含程序的版本信息
+有时，你可能希望在程序的帮助或用法消息中包含版本信息。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+)
+
+var version = "1.0.0" // 可以在构建时通过链接器标志设置
+
+func main() {
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Version: %s\n", version)
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+
+	flag.Parse()
+}
+```
+运行程序：
+```bash
+$ go run main.go -h
+Version: 1.0.0
+Usage of main:
+```
+
