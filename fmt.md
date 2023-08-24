@@ -435,4 +435,125 @@ func main() {
 }
 ```
 
+### %g 和 %G: 为大指数格式化输出，使用 `%e` 或 `%E`；对于小的指数，使用 `%f`。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    num := 0.000000012345
+    fmt.Printf("Using %%g: %g\n", num)
+    fmt.Printf("Using %%G: %G\n", num)
+}
+```
+
+### 零标志: 通过 `0` 标志来填充0，使得输出的宽度由后续数字指定。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    number := 5
+    fmt.Printf("Padding with zeros: %04d\n", number)
+}
+```
+
+### 符号标志: 使用 `+` 标志总是输出数字的符号。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    num := 42
+    fmt.Printf("Using + with positive number: %+d\n", num)
+    num = -42
+    fmt.Printf("Using + with negative number: %+d\n", num)
+}
+```
+
+### 空格标志: 使用空格标志在正数前面加上空格，而负数前面使用 `-`。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    num := 42
+    fmt.Printf("Using space with positive number: % d\n", num)
+    num = -42
+    fmt.Printf("Using space with negative number: % d\n", num)
+}
+```
+
+### #标志: 它会使输出的格式变为另一种形式，具体取决于所使用的格式化动词。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Printf("Without #: %x\n", 255)   // ff
+    fmt.Printf("With #: %#x\n", 255)    // 0xff
+    fmt.Printf("Without #: %o\n", 8)    // 10
+    fmt.Printf("With #: %#o\n", 8)      // 010
+    fmt.Printf("Without #: %b\n", 5)    // 101
+    fmt.Printf("With #: %#b\n", 5)      // 0b101
+}
+```
+
+### 读取字符串直到空格或换行: 使用 `%s` 来从输入读取字符串，它会在遇到空格或换行符时停止。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Type a word:")
+    var word string
+    fmt.Scanf("%s", &word)
+    fmt.Printf("You typed: %s\n", word)
+}
+```
+
+### 读取整行字符串: 使用 `%s` 与 `Scan` 或 `Scanln` 来从输入读取整行内容。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Type a sentence:")
+    var sentence string
+    fmt.Scanln(&sentence)
+    fmt.Printf("You typed: %s\n", sentence)
+}
+```
+
+### FormatInt 和 FormatUint: 直接格式化整数值为字符串，提供更多的控制。
+
+```go
+package main
+
+import (
+    "fmt"
+    "strconv"
+)
+
+func main() {
+    val := int64(255)
+    str := strconv.FormatInt(val, 16)
+    fmt.Printf("Hexadecimal representation: %s\n", str)
+}
+```
+
 Done.
