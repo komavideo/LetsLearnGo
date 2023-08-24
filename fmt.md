@@ -180,3 +180,131 @@ func main() {
 }
 ```
 
+### %c: 输出字符表示的整数值。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    char := 65
+    fmt.Printf("The character representation is: %c\n", char)
+}
+```
+
+### %U: 输出 Unicode 表示形式。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    char := '中'
+    fmt.Printf("The Unicode format is: %U\n", char)
+}
+```
+
+### %b: 输出二进制表示。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    number := 5
+    fmt.Printf("The binary format is: %b\n", number)
+}
+```
+
+### %e 和 %E: 输出浮点数的科学记数法表示。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    number := 123400000.0
+    fmt.Printf("Scientific notation (lowercase): %e\n", number)
+    fmt.Printf("Scientific notation (uppercase): %E\n", number)
+}
+```
+
+### Fscan & Fscanf & Fscanln: 这些函数从 `io.Reader` (如文件) 读取文本。
+
+```go
+package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+func main() {
+    reader := strings.NewReader("123 456")
+    var a, b int
+    fmt.Fscan(reader, &a, &b)
+    fmt.Printf("a: %d, b: %d\n", a, b)
+}
+```
+
+### %p: 输出指针的地址。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    number := 5
+    fmt.Printf("The address of number is: %p\n", &number)
+}
+```
+
+### 复数格式化: `%f`, `%g`, 和 `%e` 也可以用于复数类型。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    complexNum := 2 + 3i
+    fmt.Printf("Complex number: %v\n", complexNum)
+}
+```
+
+### 结构体和其他数据格式化: 使用 `%+v` 可以输出结构体的字段名和值。
+
+```go
+package main
+
+import "fmt"
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+func main() {
+    person := Person{Name: "Alice", Age: 30}
+    fmt.Printf("Person struct: %+v\n", person)
+}
+```
+
+### 格式化标志: 使用 `#` 标志为 `%v` 生成 `Go` 语法表示。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    numbers := []int{1, 2, 3}
+    fmt.Printf("%#v\n", numbers)
+}
+```
+
