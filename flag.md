@@ -941,3 +941,121 @@ Version: 1.0.0
 Usage of main:
 ```
 
+### 41. 与配置文件一起使用
+虽然 `flag` 主要是用于解析命令行参数，但在实践中，你可能会遇到需要从配置文件和命令行参数中读取设置的情况。命令行参数通常用于覆盖配置文件中的默认设置。你可以结合第三方库，如 `viper`，实现这一功能，但以下是一个简单的示例，说明如何使用 `flag` 和简单的配置文件逻辑：
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"strings"
+)
+
+func readConfig() string {
+	data, err := ioutil.ReadFile("config.txt")
+	if err != nil {
+		return "blue" // 默认值
+	}
+	return strings.TrimSpace(string(data))
+}
+
+func main() {
+	defaultColor := readConfig()
+
+	color := flag.String("color", defaultColor, "set the color")
+	flag.Parse()
+
+	fmt.Println("Color:", *color)
+}
+```
+
+### 42. 从标准输入读取标志
+如果你有一个长的命令行参数列表或希望在脚本中动态地生成参数，你可以从标准输入中读取参数。这可以使用 `os.Stdin` 和 `ioutil.ReadAll` 来实现。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+)
+
+func main() {
+	data, _ := ioutil.ReadAll(os.Stdin)
+	args := strings.Fields(string(data))
+
+	flag.CommandLine.Parse(args)
+	verbose := flag.Bool("verbose", false, "display verbose output")
+
+	fmt.Println("Verbose:", *verbose)
+}
+```
+运行方式：
+```bash
+$ echo "-verbose" | go run main.go
+Verbose: true
+```
+
+### 43. 使用Bool和IsSet函数
+你可以通过组合 `flag.Lookup` 和类型断言来检查一个标志是否被设置，并获取其布尔值。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func IsSet(name string) bool {
+	f := flag.Lookup(name)
+	return f != nil && f.Value.String() != f.DefValue
+}
+
+func main() {
+	verbose := flag.Bool("verbose", false, "display verbose output")
+	flag.Parse()
+
+	if IsSet("verbose") {
+		fmt.Println("Verbose mode is set to:", *verbose)
+	} else {
+		fmt.Println("Verbose mode is using the default value.")
+	}
+}
+```
+
+### 44. 处理未知标志
+默认情况下，当你传递一个未知标志时，程序会产生一个错误并退出。但如果你希望程序处理未知标志，你可以使用 `flag.ContinueOnError` 错误处理策略。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	fs := flag.NewFlagSet("test", flag.ContinueOnError)
+	verbose := fs.Bool("verbose", false, "display verbose output")
+
+	err := fs.Parse(os.Args[1:])
+	if err == flag.ErrHelp {
+		// 用户请求帮助
+		return
+	}
+
+	if err != nil {
+		fmt.Println("Encountered an error when parsing flags:", err)
+	}
+
+	fmt.Println("Verbose:", *verbose)
+}
+```
+
