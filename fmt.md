@@ -308,3 +308,131 @@ func main() {
 }
 ```
 
+### %o: 输出八进制表示。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    number := 64
+    fmt.Printf("The octal format is: %o\n", number)
+}
+```
+
+### Scanf 多字段输入: 可以从标准输入读取多个字段。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var name string
+    var age int
+    fmt.Printf("Enter your name and age (e.g., Alice 30): ")
+    fmt.Scanf("%s %d", &name, &age)
+    fmt.Printf("Name: %s, Age: %d\n", name, age)
+}
+```
+
+### Stringer 接口: 如果你的类型实现了 `String() string` 方法，`fmt.Print` 和相关函数会使用它来获取该类型的字符串表示。
+
+```go
+package main
+
+import "fmt"
+
+type Fruit struct {
+    Name  string
+    Color string
+}
+
+func (f Fruit) String() string {
+    return fmt.Sprintf("Fruit(Name: %s, Color: %s)", f.Name, f.Color)
+}
+
+func main() {
+    apple := Fruit{Name: "Apple", Color: "Red"}
+    fmt.Println(apple)
+}
+```
+
+### Formatter 接口: 如果你希望自定义类型在 `fmt.Printf` 和相关函数中的格式化行为，你可以为该类型实现 `fmt.Formatter` 接口。
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+type Coordinate struct {
+    X, Y int
+}
+
+func (c Coordinate) Format(f fmt.State, verb rune) {
+    switch verb {
+    case 'v':
+        if f.Flag('+') {
+            fmt.Fprintf(f, "Coordinate{X:%d, Y:%d}", c.X, c.Y)
+        } else {
+            fmt.Fprintf(f, "Coordinate{%d, %d}", c.X, c.Y)
+        }
+    case 'q':
+        fmt.Fprintf(f, "\"(%d, %d)\"", c.X, c.Y)
+    default:
+        fmt.Fprintf(f, "(%d, %d)", c.X, c.Y)
+    }
+}
+
+func main() {
+    point := Coordinate{5, 7}
+    fmt.Printf("%v\n", point)
+    fmt.Printf("%+v\n", point)
+    fmt.Printf("%q\n", point)
+}
+```
+
+### 宽度和精度的动态指定: 可以使用 `*` 在 `fmt.Printf` 中动态指定宽度和精度。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    pi := 3.14159265
+    width := 10
+    precision := 3
+    fmt.Printf("Pi with width %d and precision %d: %*.*f\n", width, precision, width, precision, pi)
+}
+```
+
+### Verb `%%`: 打印出 `%` 符号。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Printf("There's a 50%% chance of rain.\n")
+}
+```
+
+### Go 语法表示的其他例子:
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    m := map[string]int{"one": 1, "two": 2}
+    fmt.Printf("%#v\n", m)
+}
+```
+
+Done.
