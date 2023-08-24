@@ -688,3 +688,121 @@ func main() {
 }
 ```
 
+### 31. 在不同的模块中定义标志
+当你的应用程序变得复杂时，你可能会在不同的模块中定义标志。每个模块都可以导入 `flag` 包并定义自己的标志。当主模块调用 `flag.Parse()` 时，它将解析所有模块中定义的标志。
+
+例如，假设你有一个名为 `config` 的模块，它定义了一些标志：
+
+```go
+// config/config.go
+package config
+
+import "flag"
+
+var Verbose = flag.Bool("verbose", false, "display verbose output")
+```
+在你的主模块中，你可以这样使用它：
+```go
+package main
+
+import (
+	"fmt"
+	"yourproject/config"
+	"flag"
+)
+
+func main() {
+	flag.Parse()
+	fmt.Println("Verbose:", *config.Verbose)
+}
+```
+
+### 32. flag.FlagSet
+你可以使用 `flag.FlagSet` 创建多个独立的标志集，这在编写支持多个子命令的命令行工具时特别有用。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	fs1 := flag.NewFlagSet("command1", flag.ExitOnError)
+	fs1Verbose := fs1.Bool("verbose", false, "verbose output")
+
+	fs2 := flag.NewFlagSet("command2", flag.ExitOnError)
+	fs2Color := fs2.String("color", "blue", "color setting")
+
+	if len(os.Args) < 2 {
+		fmt.Println("expected 'command1' or 'command2' subcommands")
+		os.Exit(1)
+	}
+
+	switch os.Args[1] {
+	case "command1":
+		fs1.Parse(os.Args[2:])
+		fmt.Println("subcommand 'command1'")
+		fmt.Println("  verbose:", *fs1Verbose)
+	case "command2":
+		fs2.Parse(os.Args[2:])
+		fmt.Println("subcommand 'command2'")
+		fmt.Println("  color:", *fs2Color)
+	default:
+		fmt.Println("expected 'command1' or 'command2' subcommands")
+		os.Exit(1)
+	}
+}
+```
+
+### 33. 标志的别名
+有时，你可能希望一个标志有多个名称。你可以通过多次使用 `flag.Var` 或类似的方法来为同一个变量定义多个标志。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	var verbose bool
+	flag.BoolVar(&verbose, "v", false, "display verbose output (short)")
+	flag.BoolVar(&verbose, "verbose", false, "display verbose output (long)")
+
+	flag.Parse()
+
+	fmt.Println("Verbose:", verbose)
+}
+```
+
+### 34. 定义你自己的错误处理
+默认情况下，当解析标志时遇到错误，`flag` 包会打印一个错误消息并调用 `os.Exit(2)`。你可以通过设置 `flag.CommandLine.Init` 的第二个参数来更改此行为。例如，你可以使用 `flag.ContinueOnError` 使其不退出。
+
+### 35. 定义非标志参数的约束
+有时，除了标志外，你的命令行程序还需要一些位置参数（非标志参数）。你可以在调用 flag.Parse() 之后使用 flag.Args() 来获取并验证它们。
+
+```go
+package main
+
+import (
+	"flag"
+	"fmt"
+)
+
+func main() {
+	flag.Parse()
+
+	args := flag.Args()
+	if len(args) != 2 {
+		fmt.Println("Expected exactly two arguments!")
+		return
+	}
+
+	fmt.Println("First argument:", args[0])
+	fmt.Println("Second argument:", args[1])
+}
+```
+
