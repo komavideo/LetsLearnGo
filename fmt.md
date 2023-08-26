@@ -556,4 +556,148 @@ func main() {
 }
 ```
 
+### %x 和 %X: 分别以小写和大写的方式输出十六进制数。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    num := 255
+    fmt.Printf("Hexadecimal (lowercase): %x\n", num)
+    fmt.Printf("Hexadecimal (uppercase): %X\n", num)
+}
+```
+
+### %q: 输出带双引号的字符串，适用于字符串、字符、[]byte，也可以用来输出数字。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    str := "hello"
+    fmt.Printf("Quoted string: %q\n", str)
+}
+```
+
+### Scan 和 Scanln: 从标准输入读取。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var i int
+    var s string
+    fmt.Println("Enter an integer and a string:")
+    fmt.Scan(&i, &s)
+    fmt.Printf("You entered: %d and %s\n", i, s)
+}
+```
+
+### Scanf 的特定格式输入: 使用 Scanf 定义输入的格式。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var day, month, year int
+    fmt.Println("Enter a date (dd-mm-yyyy):")
+    fmt.Scanf("%02d-%02d-%04d", &day, &month, &year)
+    fmt.Printf("You entered the date: %02d/%02d/%04d\n", day, month, year)
+}
+```
+
+### Fprintln: 向指定的 `io.Writer` 输出，并在末尾添加换行。
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+)
+
+func main() {
+    fmt.Fprintln(os.Stdout, "This is a line of text.")
+}
+```
+
+### Errorf: 返回一个格式化的错误。
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+func main() {
+    err := fmt.Errorf("This is an error with code: %d", 404)
+    fmt.Println(err)
+}
+```
+
+### %T: 输出值的类型。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var myVar interface{} = 42
+    fmt.Printf("The type of myVar is: %T\n", myVar)
+}
+```
+
+### Sprint、Sprintf 和 Sprintln: 生成一个格式化字符串，但不输出它。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    message := fmt.Sprintf("The answer to life, the universe, and everything is %d", 42)
+    fmt.Println(message)
+}
+```
+
+### 动态指定格式: 有时，您可能需要根据运行时条件动态地指定格式。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var format string
+    if someCondition := true; someCondition {
+        format = "The result is %d!"
+    } else {
+        format = "Result: %d."
+    }
+    fmt.Printf(format, 42)
+}
+```
+
+### 使用索引进行参数排序: 对于复杂的格式化，您可能希望多次使用相同的参数，或更改参数的顺序。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Printf("First: %d, Second: %d, First Again: %[1]d\n", 1, 2)
+}
+```
+
 Done.
