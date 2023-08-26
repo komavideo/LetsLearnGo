@@ -228,3 +228,81 @@ func isVowel(r rune) bool {
 fmt.Println(strings.IndexFunc("Hello", isVowel)) // 1
 ```
 
+### strings.NewReader
+创建一个从字符串读取的新Reader。
+
+```go
+r := strings.NewReader("Golang")
+
+buf := make([]byte, 4)
+r.Read(buf)
+fmt.Printf("%s\n", buf) // Gola
+```
+
+### strings.SplitN 和 strings.SplitAfter 和 strings.SplitAfterN
+这些函数提供了更具体的字符串分割方式。
+
+```go
+fmt.Println(strings.SplitN("a,b,c", ",", 2))         // [a b,c]
+fmt.Println(strings.SplitAfter("a,b,c", ","))        // [a, b, c]
+fmt.Println(strings.SplitAfterN("a,b,c", ",", 2))    // [a, b,c]
+```
+
+### strings.Count
+计算非重叠子串出现的次数。
+
+```go
+fmt.Println(strings.Count("cheese", "e")) // 3
+```
+
+### strings.HasPrefix 和 strings.HasSuffix
+检查字符串是否以指定的前缀或后缀开始或结束。
+
+```go
+fmt.Println(strings.HasPrefix("Golang", "Go"))  // true
+fmt.Println(strings.HasSuffix("Golang", "lang"))// true
+```
+
+### strings.Join
+连接字符串切片中的元素。
+
+```go
+strs := []string{"Hello", "World"}
+fmt.Println(strings.Join(strs, ", ")) // Hello, World
+```
+
+### strings.ToLowerSpecial 和 strings.ToUpperSpecial
+使用特定的unicode.CaseRange进行大小写转换。
+
+```go
+import "unicode"
+
+fmt.Println(strings.ToLowerSpecial(unicode.TurkishCase, "İSTANBUL")) // istanbul
+```
+
+### strings.ToTitle 和 strings.ToTitleSpecial
+将字符串中的每个单词的首字母转换为大写或使用特定的unicode.CaseRange进行标题化。
+
+```go
+fmt.Println(strings.ToTitle("loud noises"))          // LOUD NOISES
+fmt.Println(strings.ToTitleSpecial(unicode.TurkishCase, "loud noises")) // LOUD NOISES
+```
+
+### strings.TrimSpace
+删除字符串的前导和尾部空格。
+
+```go
+fmt.Println(strings.TrimSpace(" \t\n Hello, World \n\t\r\n")) // Hello, World
+```
+
+### strings.LastIndexFunc
+使用函数查找符合条件的字符在字符串中的最后一个索引。
+
+```go
+func isVowel(r rune) bool {
+    return strings.ContainsRune("aeiouAEIOU", r)
+}
+
+fmt.Println(strings.LastIndexFunc("Hello", isVowel)) // 4
+```
+
