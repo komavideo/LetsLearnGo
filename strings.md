@@ -306,3 +306,77 @@ func isVowel(r rune) bool {
 fmt.Println(strings.LastIndexFunc("Hello", isVowel)) // 4
 ```
 
+### strings.Reader结构体
+这是一个从字符串读取的Reader。我们已经简要地提到了`strings.NewReader`，但`strings.Reader`本身提供了更多的方法，如 `Len()`, `Size()`, `ReadRune()`, `UnreadRune()`, `Seek()` 等。
+
+```go
+r := strings.NewReader("Golang")
+
+ch, _, _ := r.ReadRune()
+fmt.Println(ch)  // 'G' 
+
+r.UnreadRune()  // unread last rune
+ch, _, _ = r.ReadRune()
+fmt.Println(ch)  // 'G' again
+```
+
+### strings.ContainsAny
+检查字符串是否包含字符集中的任何字符。
+
+```go
+fmt.Println(strings.ContainsAny("Golang", "xyzG"))  // true
+```
+
+### strings.Count
+计算子字符串在字符串中出现的次数。
+
+```go
+fmt.Println(strings.Count("hello world hello", "hello"))  // 2
+```
+
+### strings.EqualFold
+执行大小写不敏感的字符串比较。
+
+```go
+fmt.Println(strings.EqualFold("GO", "go"))  // true
+```
+
+### strings.FieldFunc
+将字符串分割为一个切片，分割点由函数决定。
+
+```go
+f := func(c rune) bool {
+    return c == ',' || c == ';'
+}
+fmt.Println(strings.FieldsFunc("a,b;c", f))  // [a b c]
+```
+
+### strings.IndexByte
+返回子字节在字符串中的第一个实例的索引，如果字符串中不存在子字节，则返回-1。
+
+```go
+fmt.Println(strings.IndexByte("Golang", 'a'))  // 3
+```
+
+### strings.LastIndexByte
+返回子字节在字符串中的最后一个实例的索引。
+
+```go
+fmt.Println(strings.LastIndexByte("Golang", 'g'))  // 5
+```
+
+### strings.Replacer结构体
+一个Replacer替换字符串中的一组字符串。它可以安全地被多个并发Goroutines使用。
+
+```go
+r := strings.NewReplacer("<", "&lt;", ">", "&gt;")
+fmt.Println(r.Replace("<Hello>"))  // &lt;Hello&gt;
+```
+
+### strings.RuneCount 和 strings.RuneCountInString
+计算字符串中的Unicode码点数量。
+
+```go
+fmt.Println(strings.RuneCountInString("Golang"))  // 6
+```
+
