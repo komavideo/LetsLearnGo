@@ -380,3 +380,73 @@ fmt.Println(r.Replace("<Hello>"))  // &lt;Hello&gt;
 fmt.Println(strings.RuneCountInString("Golang"))  // 6
 ```
 
+### strings.Replace
+在`s`中使用`new`替换前`n`个`old`出现的地方，如果`n`为`-1`则替换所有`old`。
+
+```go
+fmt.Println(strings.Replace("hello world hello world", "world", "gopher", 1))  // hello gopher hello world
+```
+
+### strings.Trim
+删除字符串的前导和尾部字符集中的字符。
+
+```go
+fmt.Println(strings.Trim("!!!hello!!!", "!"))  // hello
+```
+
+### strings.TrimSpace
+删除字符串的前导和尾部空白字符。
+
+```go
+fmt.Println(strings.TrimSpace(" \t\n Hello, World \n\t "))  // Hello, World
+```
+
+### strings.ToLower 和 strings.ToUpper
+将字符串转换为全部小写或全部大写。
+
+```go
+fmt.Println(strings.ToLower("GOLANG"))  // golang
+fmt.Println(strings.ToUpper("golang"))  // GOLANG
+```
+
+### strings.NewReplacer
+创建并返回一个*Replacer。已在上面的例子中提到过这个函数，它用于创建字符串的替换映射。
+
+```go
+replacer := strings.NewReplacer("foo", "bar", "hello", "world")
+result := replacer.Replace("foo hello")
+fmt.Println(result)  // bar world
+```
+
+### strings.Reader.Size
+返回原始字符串的长度。
+
+```go
+r := strings.NewReader("Golang")
+fmt.Println(r.Size())  // 6
+```
+
+### strings.Reader.Reset
+将Reader重置为从新的字符串`s`读取。
+
+```go
+r := strings.NewReader("Golang")
+r.Reset("Hello")
+buf := make([]byte, 5)
+r.Read(buf)
+fmt.Printf("%s\n", buf)  // Hello
+```
+
+### strings.Reader.UnreadByte 和 strings.Reader.UnreadRune
+撤消最后的`ReadByte`或`ReadRune`操作。如果最后一个操作不是读取单字节或单个rune，则操作无效。
+
+```go
+r := strings.NewReader("Golang")
+b, _ := r.ReadByte()
+fmt.Printf("%c\n", b)  // G
+r.UnreadByte()
+b, _ = r.ReadByte()
+fmt.Printf("%c\n", b)  // G again
+```
+
+
