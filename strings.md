@@ -521,3 +521,81 @@ r.Read(buf)
 fmt.Printf("%s\n", buf)  // lang
 ```
 
+### strings.Reader.ReadBytes
+读取直到第一次遇到指定的字节，然后返回一个切片，该切片包含直到该字节（包括该字节）的数据。
+
+```go
+r := strings.NewReader("Golang, the best!")
+data, _ := r.ReadBytes(',')
+fmt.Printf("%s\n", data)  // "Golang,"
+```
+
+### strings.Reader.ReadString
+与`ReadBytes`类似，但返回的是字符串。
+
+```go
+r := strings.NewReader("Golang, the best!")
+data, _ := r.ReadString(',')
+fmt.Println(data)  // "Golang,"
+```
+
+### strings.IndexAny
+返回字符串中第一个与字符集中的任意字符匹配的字符的索引，如果没有匹配则返回-1。
+
+```go
+fmt.Println(strings.IndexAny("Golang", "xyzG"))  // 0
+```
+
+### strings.LastIndexAny
+返回字符串中与字符集中的任何字符匹配的最后一个字符的索引。
+
+```go
+fmt.Println(strings.LastIndexAny("Golang", "xyzG"))  // 5
+```
+
+### strings.HasPrefix 和 strings.HasSuffix
+检查字符串是否以指定的前缀或后缀开始或结束。
+
+```go
+fmt.Println(strings.HasPrefix("Golang", "Go"))    // true
+fmt.Println(strings.HasSuffix("Golang", "Lang"))  // false
+```
+
+### strings.Map
+返回字符串`s`的新版本，其中每个字符都通过函数`mapping`进行了替换。如果映射返回-1，则不包含该字符的对应项。
+
+```go
+f := func(r rune) rune {
+    switch {
+    case r == 'o':
+        return 'a'
+    default:
+        return r
+    }
+}
+fmt.Println(strings.Map(f, "Golang"))  // "Galang"
+```
+
+### strings.Compare
+比较两个字符串并返回一个整数。如果两个字符串相等则返回0，如果`a`小于`b`则返回-1，否则返回1。
+
+```go
+fmt.Println(strings.Compare("a", "b"))     // -1
+fmt.Println(strings.Compare("a", "a"))     // 0
+fmt.Println(strings.Compare("b", "a"))     // 1
+```
+
+### strings.Repeat
+将字符串重复`count`次并返回。
+
+```go
+fmt.Println(strings.Repeat("Go", 3))  // GoGoGo
+```
+
+### strings.ReplaceAll
+在`s`中用`new`替换所有`old`的出现。
+
+```go
+fmt.Println(strings.ReplaceAll("oink oink oink", "k", "ky"))  // "oinky oinky oinky"
+```
+
