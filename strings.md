@@ -1,4 +1,4 @@
-strings的使用
+使用strings库
 =============
 
 Go语言的strings库提供了很多用于操作字符串的有用功能。
@@ -148,5 +148,83 @@ builder.WriteString("Go")
 builder.WriteString(" is")
 builder.WriteString(" fun!")
 fmt.Println(builder.String()) // Go is fun!
+```
+
+### strings.Map
+对字符串中的每个字符应用指定的函数。
+
+```go
+func toAsterisk(r rune) rune {
+    return '*'
+}
+
+fmt.Println(strings.Map(toAsterisk, "GoLang")) // ******
+```
+
+### strings.ReplaceAll
+替换所有子串出现的位置。
+
+```go
+fmt.Println(strings.ReplaceAll("hello, hello", "hello", "world")) // world, world
+```
+
+### strings.TrimFunc 和 strings.TrimLeftFunc 和 strings.TrimRightFunc
+使用自定义函数去除字符。
+
+```go
+func filterFn(r rune) bool {
+    return r == '!' || r == '?'
+}
+
+fmt.Println(strings.TrimFunc("!!Hello World?!", filterFn)) // Hello World
+```
+
+### strings.ContainsRune
+检查字符串是否包含指定的rune字符。
+
+```go
+fmt.Println(strings.ContainsRune("Golang", 'G')) // true
+```
+
+### strings.Compare
+比较两个字符串。如果两个字符串相等则返回0，如果第一个字符串小于第二个返回-1，否则返回1。不过直接使用==操作符来比较字符串更为直观和常见。
+
+```go
+fmt.Println(strings.Compare("a", "b")) // -1
+fmt.Println(strings.Compare("a", "a")) // 0
+fmt.Println(strings.Compare("b", "a")) // 1
+```
+
+### strings.EqualFold
+执行不区分大小写的字符串比较。
+
+```go
+fmt.Println(strings.EqualFold("Go", "go")) // true
+```
+
+### strings.LastIndexAny 和 strings.IndexAny
+查找字符集合中任何字符在字符串中的最后一个或第一个匹配的索引。
+
+```go
+fmt.Println(strings.IndexAny("chicken", "aeiouy"))      // 2
+fmt.Println(strings.LastIndexAny("chicken", "aeiouy")) // 5
+```
+
+### strings.IndexRune
+查找rune在字符串中的索引。
+
+```go
+fmt.Println(strings.IndexRune("chicken", 'k')) // 4
+```
+
+### strings.IndexFunc
+使用函数查找符合条件的字符在字符串中的索引。
+
+```go
+func isVowel(r rune) bool {
+    return strings.ContainsRune("aeiouAEIOU", r)
+}
+
+fmt.Println(strings.IndexFunc("Hello", isVowel)) // 1
 ```
 
