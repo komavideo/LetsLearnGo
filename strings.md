@@ -449,4 +449,75 @@ b, _ = r.ReadByte()
 fmt.Printf("%c\n", b)  // G again
 ```
 
+### strings.Title
+将字符串中的每个单词的首字母转换为大写。
+
+```go
+fmt.Println(strings.Title("hello world"))  // Hello World
+```
+
+### strings.TrimLeft 和 strings.TrimRight
+从字符串的开头或结尾删除字符集中的字符。
+
+```go
+fmt.Println(strings.TrimLeft("!!!hello!!!", "!"))  // hello!!!
+fmt.Println(strings.TrimRight("!!!hello!!!", "!")) // !!!hello
+```
+
+### strings.TrimPrefix 和 strings.TrimSuffix
+删除字符串的前缀或后缀（如果存在）。
+
+```go
+fmt.Println(strings.TrimPrefix("GoLang", "Go"))   // Lang
+fmt.Println(strings.TrimSuffix("GoLang", "Lang")) // Go
+```
+
+### strings.Replacer.WriteString
+*Replacer类型的方法。对于提供的writer，此方法将`s`中的每个匹配项替换为其相应的替换项，并将结果写入writer。返回的是写入的字节数以及可能的错误。
+
+```go
+replacer := strings.NewReplacer("foo", "bar")
+var buf bytes.Buffer
+replacer.WriteString(&buf, "foo world")
+fmt.Println(buf.String())  // bar world
+```
+
+### strings.Reader.ReadAt
+从原始字符串的`off`偏移量开始，读取`len(b)`个字节到`b`。返回读取的字节数和可能的错误。
+
+```go
+r := strings.NewReader("Golang")
+buf := make([]byte, 4)
+r.ReadAt(buf, 2)
+fmt.Printf("%s\n", buf)  // lang
+```
+
+### strings.Reader.ReadByte
+从Reader读取并返回下一个字节。
+
+```go
+r := strings.NewReader("Golang")
+b, _ := r.ReadByte()
+fmt.Printf("%c\n", b)  // G
+```
+
+### strings.Reader.ReadRune
+从`Reader`读取并返回下一个Unicode代码点。
+
+```go
+r := strings.NewReader("语言")
+ch, _, _ := r.ReadRune()
+fmt.Printf("%c\n", ch)  // 语
+```
+
+### strings.Reader.Seek
+设置下一个Read或ReadAt的偏移量。
+
+```go
+r := strings.NewReader("Golang")
+r.Seek(2, io.SeekStart)
+buf := make([]byte, 4)
+r.Read(buf)
+fmt.Printf("%s\n", buf)  // lang
+```
 
