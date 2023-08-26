@@ -666,3 +666,88 @@ fmt.Println(strings.TrimLeftFunc("!!!Go Gopher!!!", f))   // Go Gopher!!!
 fmt.Println(strings.TrimRightFunc("!!!Go Gopher!!!", f))  // !!!Go Gopher
 ```
 
+### strings.Count
+返回字符串`s`中`substr`的非重叠出现次数。如果`substr`是空字符串，返回`s`的长度加1。
+
+```go
+fmt.Println(strings.Count("Go Gopher", "Go"))  // 2
+fmt.Println(strings.Count("Hello", ""))       // 6
+```
+
+### strings.Fields
+按任意数量的空白字符（如空格、制表符或换行符）将字符串`s`分割为子字符串。
+
+```go
+fmt.Println(strings.Fields("  Go \t Gopher  \n "))  // [Go Gopher]
+```
+
+### strings.FieldsFunc
+与`Fields`类似，但可以自定义分隔符通过一个函数。
+
+```go
+f := func(c rune) bool {
+    return c == '-'
+}
+fmt.Println(strings.FieldsFunc("Go-Gopher-Google", f))  // [Go Gopher Google]
+```
+
+### strings.ToLower 和 strings.ToUpper
+将字符串中的所有字符转换为小写或大写。
+
+```go
+fmt.Println(strings.ToLower("Go Gopher"))  // go gopher
+fmt.Println(strings.ToUpper("Go Gopher"))  // GO GOPHER
+```
+
+### strings.ToTitle
+将整个字符串转换为标题格式（所有字符都为大写）。
+
+```go
+fmt.Println(strings.ToTitle("go gopher"))  // GO GOPHER
+```
+
+### strings.Reader.Len
+返回未读取的字符数。
+
+```go
+r := strings.NewReader("Go Gopher")
+fmt.Println(r.Len())  // 9
+r.ReadByte()
+fmt.Println(r.Len())  // 8
+```
+
+### strings.Reader.UnreadRune 和 strings.Reader.UnreadByte
+撤消最近的`ReadRune`或`ReadByte`操作。
+
+```go
+r := strings.NewReader("Golang")
+byteRead, _ := r.ReadByte()
+fmt.Println(string(byteRead))  // G
+r.UnreadByte()
+byteAgain, _ := r.ReadByte()
+fmt.Println(string(byteAgain))  // G again
+```
+
+### strings.Reader.Reset
+重置`Reader`到一个新的字符串`s`。
+
+```go
+r := strings.NewReader("Go")
+r.ReadByte()
+r.Reset("Gopher")
+newByte, _ := r.ReadByte()
+fmt.Println(string(newByte))  // G from "Gopher"
+```
+
+### strings.Builder
+提供了一个可写对象，用于构建和修改字符串。这比连续的字符串连接更有效。
+
+```go
+var b strings.Builder
+b.WriteString("Go")
+b.WriteString(" ")
+b.WriteString("Gopher")
+fmt.Println(b.String())  // Go Gopher
+```
+
+Done.
