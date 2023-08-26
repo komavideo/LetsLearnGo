@@ -599,3 +599,70 @@ fmt.Println(strings.Repeat("Go", 3))  // GoGoGo
 fmt.Println(strings.ReplaceAll("oink oink oink", "k", "ky"))  // "oinky oinky oinky"
 ```
 
+### strings.LastIndex
+返回`substr`在`s`中最后出现的位置的索引，如果`s`中不包含`substr`，则返回-1。
+
+```go
+fmt.Println(strings.LastIndex("Go Go Gopher", "Go"))  // 3
+```
+
+### strings.LastIndexFunc
+返回`s`中满足函数`f`的最后一个字符的索引，如果`s`中没有字符满足函数`f`，则返回-1。
+
+```go
+f := func(c rune) bool {
+    return c == 'o'
+}
+fmt.Println(strings.LastIndexFunc("Go Go Gopher", f))  // 9
+```
+
+### strings.SplitN
+将`s`分割成最多`n`个子字符串，分割点由`sep`定义。如果`s`包含比`n-1`更多的分隔符，则返回的数组的长度为`n`，并且最后一个字符串将是未分割的剩余部分。
+
+```go
+fmt.Println(strings.SplitN("a,b,c,d,e", ",", 3))  // [a b c,d,e]
+```
+
+### strings.SplitAfter
+与`Split`类似，但在返回的每个字符串后面包含分隔符。
+
+```go
+fmt.Println(strings.SplitAfter("a,b,c", ","))  // [a, b, c]
+```
+
+### strings.SplitAfterN
+将`s`分割成最多`n`个子字符串，但在返回的每个字符串后面包含分隔符。
+
+```go
+fmt.Println(strings.SplitAfterN("a,b,c,d,e", ",", 3))  // [a, b, c,d,e]
+```
+
+### strings.Join
+将字符串切片`s`连接为一个字符串，字符串之间用`sep`分隔。
+
+```go
+slice := []string{"Go", "Gopher", "Google"}
+fmt.Println(strings.Join(slice, "-"))  // Go-Gopher-Google
+```
+
+### strings.TrimSpaceFunc
+删除字符串`s`的前缀和后缀，直到`f`函数返回`false`为止。
+
+```go
+f := func(c rune) bool {
+    return c == '!'
+}
+fmt.Println(strings.TrimFunc("!!!Go Gopher!!!", f))  // Go Gopher
+```
+
+### strings.TrimLeftFunc 和 strings.TrimRightFunc
+这两个函数与`TrimFunc`类似，但它们只删除左侧或右侧的字符。
+
+```go
+f := func(c rune) bool {
+    return c == '!'
+}
+fmt.Println(strings.TrimLeftFunc("!!!Go Gopher!!!", f))   // Go Gopher!!!
+fmt.Println(strings.TrimRightFunc("!!!Go Gopher!!!", f))  // !!!Go Gopher
+```
+
