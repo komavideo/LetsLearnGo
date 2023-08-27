@@ -7,6 +7,7 @@
 + [Go 语言教程](/basic.md)
 + [模块化编程 module](/module.md)
 + [处理json数据](/json.md)
++ [使用bufio库](/bufio.md)
 + [使用flag库](/flag.md)
 + [使用fmt库](fmt.md)
 + [使用log库](/log.md)
