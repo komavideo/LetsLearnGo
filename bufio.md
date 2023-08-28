@@ -385,3 +385,146 @@ func main() {
 }
 ```
 
+### 使用 ReadSlice：
+此方法会返回缓冲数据的切片，直到遇到分隔符为止，但这种方法的结果是易失的。如果之后进行了其他读取操作，返回的切片可能会被修改。
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"strings"
+)
+
+func main() {
+	reader := bufio.NewReader(strings.NewReader("Go is fun!"))
+	line, _ := reader.ReadSlice(' ')
+	fmt.Printf("Read slice: %s\n", line)  // 输出 "Go"
+}
+```
+
+### 按段读取大文件：
+在处理非常大的文件时，我们可能想要按固定大小的段来读取，而不是按行。以下是一个例子：
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, err := os.Open("largefile.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+	chunk := make([]byte, 1024)  // 定义每个块的大小
+
+	for {
+		n, err := reader.Read(chunk)
+		if err != nil {
+			break
+		}
+		fmt.Printf("Read %d bytes\n", n)
+	}
+}
+```
+
+### 为 Scanner 创建自定义分割函数：
+我们之前看到了预定义的 `ScanWords` 分割函数。但你也可以为 `Scanner` 创建自己的分割函数。以下是一个简单的例子，该函数将字符串按照两个字节进行分割：
+
+```go
+package main
+
+import (
+	"bufio"
+	"bytes"
+	"fmt"
+)
+
+func TwoByteSplit(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+
+	if len(data) >= 2 {
+		return 2, data[0:2], nil
+	}
+
+	return 0, data, bufio.ErrFinalToken
+}
+
+func main() {
+	scanner := bufio.NewScanner(bytes.NewReader([]byte("abcdef")))
+	scanner.Split(TwoByteSplit)
+
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+}
+```
+
+### ReadFrom 和 WriteTo 方法：
+如果你正在使用 `bufio.Reader` 或 `bufio.Writer` ，并希望从其他 `io.Reader` 或向 `io.Writer` 传输数据，可以使用这些方法。
+
+```go
+package main
+
+import (
+	"bufio"
+	"os"
+	"strings"
+)
+
+func main() {
+	reader := bufio.NewReader(strings.NewReader("Go is amazing!"))
+	file, err := os.Create("output.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+	reader.WriteTo(writer)
+	writer.Flush()
+}
+```
+
+### 合并多个 Writers：
+有时，你可能想要将输出写入多个地方。为此，可以使用 `io.MultiWriter` ，但与 `bufio.Writer` 结合使用可以提高效率。
+
+```go
+package main
+
+import (
+	"bufio"
+	"io"
+	"os"
+)
+
+func main() {
+	file1, err := os.Create("output1.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer file1.Close()
+
+	file2, err := os.Create("output2.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer file2.Close()
+
+	multi := io.MultiWriter(file1, file2)
+	writer := bufio.NewWriter(multi)
+	writer.WriteString("Hello to multiple files!")
+	writer.Flush()
+}
+```
+
