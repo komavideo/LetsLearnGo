@@ -528,3 +528,101 @@ func main() {
 }
 ```
 
+### 使用 Peek 预览缓冲区内容：
+有时你可能希望预览来自 `Reader` 的内容，但不真正地从中读取内容。使用 `Peek` 方法可以实现这一目标：
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"strings"
+)
+
+func main() {
+	r := strings.NewReader("Go is versatile!")
+	reader := bufio.NewReader(r)
+	peek, _ := reader.Peek(5)
+	fmt.Printf("Peeked: %s\n", peek)
+
+	data, _ := reader.ReadString(' ')
+	fmt.Printf("Read: %s\n", data)
+}
+```
+
+### 为 Scanner 使用最大令牌大小：
+如果你处理的文本令牌（如单词或行）可能非常大，你可以使用 `Scanner.Buffer` 来调整最大令牌大小：
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"strings"
+)
+
+func main() {
+	const input = "This is a very long line which exceeds default buffer size for bufio.Scanner"
+	scanner := bufio.NewScanner(strings.NewReader(input))
+
+	buf := make([]byte, 2)
+	scanner.Buffer(buf, bufio.MaxScanTokenSize*2)
+
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+}
+```
+
+### 并发安全：
+需要注意的是，`bufio` 的 `Reader` 和 `Writer` 并不是并发安全的。如果你想从多个协程同时读取或写入，则需要自己添加锁来同步操作。
+
+### 使用 bufio 进行网络编程：
+在网络编程中，`bufio` 也很常用，因为它可以缓冲数据并提高 `I/O` 效率：
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"net"
+)
+
+func handleConnection(conn net.Conn) {
+	defer conn.Close()
+
+	reader := bufio.NewReader(conn)
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			break
+		}
+		fmt.Printf("Received: %s", line)
+	}
+}
+
+func main() {
+	ln, err := net.Listen("tcp", ":8080")
+	if err != nil {
+		panic(err)
+	}
+	defer ln.Close()
+
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			fmt.Println("Connection error:", err)
+			continue
+		}
+		go handleConnection(conn)
+	}
+}
+```
+
+### 处理 bufio.ErrTooLong 错误：
+当扫描的令牌超过最大令牌大小时，会得到一个 `bufio.ErrTooLong` 错误。当处理未知大小的输入数据时，特别是来自外部来源的数据时，很重要的一点是始终检查这个错误，并相应地处理它。
+
+
