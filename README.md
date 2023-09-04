@@ -25,6 +25,10 @@
 + [Go Gin Web 开发](/gin.md)
 + [Go Echo Web 开发](echo.md)
 
+## 数据库开发
+
++ [GORM 数据库开发](/gorm.md)
+
 ## The Go Playground
 
 https://go.dev/play/
