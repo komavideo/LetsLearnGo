@@ -322,3 +322,97 @@ db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{
 })
 ```
 
+### 回调：
+
+`gorm` 允许你注册在执行数据库操作之前和之后的回调方法。你可以在创建、更新、查询或删除操作之前或之后使用它们。
+
++ 创建记录之前的回调：
+```go
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+    // 你可以在这里添加一些在创建记录之前要执行的操作
+    return
+}
+```
++ 创建记录之后的回调：
+```go
+func (u *User) AfterCreate(tx *gorm.DB) (err error) {
+    // 你可以在这里添加一些在创建记录之后要执行的操作
+    return
+}
+```
+
+同样，你可以对更新、删除和查询操作使用 `BeforeUpdate`, `AfterUpdate`, `BeforeDelete`, `AfterDelete`, `BeforeSave`, `AfterSave`, `BeforeFind`, 和 `AfterFind`。
+
+### 复杂的 SQL 构建：
+
+使用 `gorm.Expr` 可以帮助你构建更复杂的 SQL 表达式：
+
+```go
+db.Model(&user).Update("age", gorm.Expr("age + ?", 1))  // increment age by 1
+```
+
+### 使用 Raw SQL 插入：
+
+有时你可能只需要执行原始 `SQL`。`gorm` 提供了这个功能：
+
+```go
+db.Exec("INSERT INTO users (name) VALUES (?)", "John")
+```
+
+### 自定义字段名称：
+
+默认情况下，`gorm` 会将结构字段转换为下划线格式作为数据库的字段名称。但是，你可以使用 `column` 标签自定义字段名称：
+
+```go
+type User struct {
+    gorm.Model
+    FirstName string `gorm:"column:given_name"`
+    LastName  string `gorm:"column:surname"`
+}
+```
+
+### Count 和 Group：
+
+你可以轻松地获取结果集的数量或使用 `GROUP BY`：
+
+```go
+var count int64
+db.Model(&User{}).Where("age > ?", 20).Count(&count)
+
+var result []struct {
+    Age  int
+    Count int64
+}
+db.Model(&User{}).Select("age, count(*) as count").Group("age").Find(&result)
+```
+
+### 锁定：
+
+在执行某些查询时，你可能需要锁定，例如，为了防止其他数据库事务修改数据：
+
+```go
+db.Clauses(clause.Locking{Strength: "UPDATE"}).Find(&users)
+```
+
+### 支持其他数据库：
+
+尽管我之前展示的是 `SQLite`，但 `gorm` 支持多种数据库。你只需更改驱动程序并相应地配置连接。例如，为了使用 `PostgreSQL`：
+
+```go
+go get -u gorm.io/driver/postgres
+
+// 连接
+dsn := "host=localhost user=gorm password=gorm dbname=gorm port=9920 sslmode=disable TimeZone=Asia/Shanghai"
+db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+```
+
+### 数据库迁移：
+
+你可以使用 `AutoMigrate` 来自动执行数据库迁移：
+
+```go
+db.AutoMigrate(&User{}, &Product{})
+```
+注意: `AutoMigrate` 只会创建表、缺失的列和索引，并不会删除/更改现有的列和索引。
+
+
