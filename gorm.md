@@ -222,3 +222,103 @@ db1, err := gorm.Open(sqlite.Open("db1.sqlite"), &gorm.Config{})
 db2, err := gorm.Open(sqlite.Open("db2.sqlite"), &gorm.Config{})
 ```
 
+### 关联查询：
+
+当你有关联模型时，你可能希望一次查询中获取关联的数据。
+
++ Preloading（预加载）：
+当你要检索关联的数据时，可以使用预加载。
+```go
+var users []User
+db.Preload("Profile").Find(&users)
+```
++ Joins（联接）：
+你也可以使用 `Joins` 来编写自定义的连接查询。
+```go
+var result []struct {
+    UserName string
+    Bio      string
+}
+db.Table("users").Select("users.name, profiles.bio").Joins("left join profiles on profiles.user_id = users.id").Scan(&result)
+```
+
+### 错误处理：
+
+`gorm` 的每个查询方法都会返回一个错误，你应该始终检查它。
+
+```go
+result := db.Find(&users)
+if result.Error != nil {
+    // handle error
+}
+```
+
+### 自定义数据类型：
+
+有时你可能需要将 `Go` 中的某个数据类型映射到数据库中的特定数据类型。`gorm` 允许你创建自定义数据类型来实现这一点。
+
+```go
+type Status int
+
+const (
+    Inactive Status = iota
+    Active
+)
+
+func (s *Status) Scan(value interface{}) error {
+    // convert database value to your custom type
+}
+
+func (s Status) Value() (driver.Value, error) {
+    // convert your custom type back to database type
+}
+
+type User struct {
+    gorm.Model
+    State Status
+}
+```
+
+### 使用复合主键：
+
+`gorm` 也支持复合主键。
+
+```go
+type Subscription struct {
+    UserID   uint `gorm:"primaryKey"`
+    CourseID uint `gorm:"primaryKey"`
+    Expires  time.Time
+}
+```
+
+### Scopes（作用域）：
+
+作用域允许你定义常用的查询，然后在需要时应用它们。
+
+```go
+func ActiveUsers(db *gorm.DB) *gorm.DB {
+    return db.Where("state = ?", Active)
+}
+
+db.Scopes(ActiveUsers).Find(&users)
+```
+
+### 日志记录：
+
+`gorm` 提供了一个日志记录器，你可以使用它来查看或自定义查询日志。
+
+```go
+newLogger := logger.New(
+   log.New(os.Stdout, "\r\n", log.LstdFlags),
+   logger.Config{
+      SlowThreshold: time.Second,
+      LogLevel:      logger.Info,
+      Colorful:      true,
+   },
+)
+
+db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{
+   Logger: newLogger,
+})
+```
+
