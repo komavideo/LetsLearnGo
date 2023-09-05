@@ -623,3 +623,107 @@ newLogger := logger.New(
 db, _ := gorm.Open(sqlite.Open("test.db"), &gorm.Config{Logger: newLogger})
 ```
 
+### 使用钩子：
+
+你可以使用钩子（Hooks）来在数据库操作之前或之后执行特定的操作。
+
+```go
+func (u *User) BeforeSave(tx *gorm.DB) (err error) {
+    fmt.Println("Before saving a user...")
+    return
+}
+
+func (u *User) AfterSave(tx *gorm.DB) (err error) {
+    fmt.Println("After saving a user...")
+    return
+}
+```
+类似的钩子还有：`BeforeCreate`, `AfterCreate`, `BeforeUpdate`, `AfterUpdate`, `BeforeDelete`, `AfterDelete`, `BeforeFind` 和 `AfterFind`。
+
+### Join操作：
+
+`gorm` 提供了方便的方法来处理数据库中的 `JOIN` 操作。
+
+```go
+type Result struct {
+    Name     string
+    Age      int
+    Profile  Profile
+}
+
+var result Result
+db.Joins("JOIN profiles ON profiles.user_id = users.id").Where("users.id = ?", 1).First(&result)
+```
+
+### Preload（预加载）：
+
+如果你有关联的模型，并且想一次性加载它们，可以使用 `Preload`。
+
+```go
+db.Preload("Profile").Find(&users)  // 会加载用户的Profile
+```
+
+### 使用指针与非指针：
+
+`gorm` 允许你使用指针或非指针，但它们的行为略有不同。
+
++ 使用非指针，如果记录不存在，`gorm` 不会返回错误。
++ 使用指针，如果记录不存在，`gorm` 会返回 `ErrRecordNotFound` 错误。
+
+```go
+var user User
+err := db.First(&user, 10).Error  // 不会返回 ErrRecordNotFound
+```
+
+```go
+user := &User{}
+err := db.First(user, 10).Error   // 会返回 ErrRecordNotFound 如果找不到
+```
+
+### 使用Select选择特定的字段：
+
+如果你不想加载所有字段，可以使用 `Select` 来选择你关心的字段。
+
+```go
+var names []string
+db.Model(&User{}).Select("name").Find(&names)
+```
+
+### 使用 Clauses 来应用复杂的SQL子句：
+
+```go
+db.Clauses(clause.OnConflict{
+    UpdateAll: true,
+}).Create(&users)
+```
+
+### 使用 Scan 直接将查询结果映射到另一个结构：
+
+这对于只需要部分数据的查询特别有用。
+
+```go
+type UserDTO struct {
+    Name string
+    Age  int
+}
+
+var dto UserDTO
+db.Model(&User{}).Where("id = ?", 1).Scan(&dto)
+```
+
+### 为模型定义别名：
+
+如果你需要在查询中为模型定义别名，可以使用 `Table` 方法。
+
+```go
+db.Table("users AS u").Select("u.name").Joins("JOIN profiles AS p ON p.user_id = u.id").Where("p.name = ?", "jinzhu").Find(&users)
+```
+
+### 启用/禁用跟踪创建/更新时间：
+
+`gorm` 默认为你提供了 `created_at` 和 `updated_at` 时间戳。但如果你想禁用这一功能，可以设置 `SkipDefaultTimestamp`。
+
+```go
+db.Set("gorm:skipDefaultTimestamp", true).Create(&user)
+```
+
