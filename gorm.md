@@ -727,3 +727,105 @@ db.Table("users AS u").Select("u.name").Joins("JOIN profiles AS p ON p.user_id =
 db.Set("gorm:skipDefaultTimestamp", true).Create(&user)
 ```
 
+### 使用FirstOrInit和Attrs方法：
+
+`FirstOrInit` 会查找符合条件的第一条记录，如果找不到，它会为你初始化一个新的对象。而 `Attrs` 可以为这个新对象提供默认值。
+
+```go
+user := User{Name: "NonExistent"}
+db.Where(&user).Attrs(User{Age: 20}).FirstOrInit(&user)
+// 如果不存在名为 "NonExistent" 的用户，user 的 Age 会被设置为 20
+```
+
+### 使用Assign方法：
+
+`Assign` 方法会始终将提供的参数分配给模型，无论记录是否找到。
+
+```go
+user := User{Name: "Jinzhu"}
+db.Where(&user).Assign(User{Age: 30}).FirstOrCreate(&user)
+```
+如果已经存在名为 "Jinzhu" 的用户，那么这个用户的年龄将不会被改变，但如果不存在，一个名为 "Jinzhu" 且年龄为 30 的用户会被创建。
+
+### 使用Count方法获取结果数：
+
+你可以使用 `Count` 方法来获取满足查询条件的结果数。
+
+```go
+var count int64
+db.Model(&User{}).Where("name LIKE ?", "jin%").Count(&count)
+```
+
+### 使用Not方法排除条件：
+
+`Not` 方法可以用来排除某些条件。
+
+```go
+// 获取名字不是 "jinzhu" 的所有用户
+db.Not("name", "jinzhu").Find(&users)
+```
+
+### 使用Distinct选择唯一字段：
+
+`Distinct` 可以帮助你从结果中选择唯一字段。
+
+```go
+var ages []int
+db.Model(&User{}).Select("distinct(age)").Find(&ages)
+```
+
+### 使用Group和Having进行分组查询：
+
+你可以使用 `Group` 和 `Having` 方法来进行分组查询。
+
+```go
+var result []struct {
+    Age  int
+    Count int
+}
+db.Model(&User{}).Select("age, count(*) as count").Group("age").Having("count > ?", 3).Find(&result)
+```
+
+### 使用Related加载关联数据：
+
+假设你有一个 `Profile` 模型与 `User` 模型关联，可以使用 `Related` 方法来加载用户的资料。
+
+```go
+var user User
+db.First(&user)
+db.Model(&user).Related(&user.Profile)
+```
+注意：从 `gorm v2` 开始，推荐使用 `Preload` 代替 `Related`。
+
+### 设置连接的字符集和时区：
+
+在连接数据库时，你可能需要设置字符集或时区。
+
+```go
+dsn := "gorm:gorm@tcp(localhost:3306)/gorm?charset=utf8mb4&parseTime=True&loc=Local"
+db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+```
+
+### 使用Scan在查询时使用不同的结构：
+
+有时你可能只需要数据库表的一个子集。在这种情况下，你可以定义一个新的结构体，然后使用 `Scan` 方法将查询结果映射到这个结构体。
+
+```go
+type UserName struct {
+    Name string
+}
+
+var names []UserName
+db.Model(&User{}).Scan(&names)
+```
+
+### 监听数据库的SQL查询：
+
+你可以通过 `gorm.DB` 的 `Callback` 属性监听数据库查询。
+
+```go
+db.Callback().Query().Register("my_callback", func(scope *gorm.Scope) {
+    fmt.Println("SQL:", scope.SQL)
+})
+```
+
