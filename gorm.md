@@ -415,4 +415,108 @@ db.AutoMigrate(&User{}, &Product{})
 ```
 注意: `AutoMigrate` 只会创建表、缺失的列和索引，并不会删除/更改现有的列和索引。
 
+### 批量插入：
+
+如果你想一次性插入多条记录，可以使用 gorm 的批量插入功能。
+```go
+users := []User{{Name: "user1"}, {Name: "user2"}, {Name: "user3"}}
+db.Create(&users)
+```
+
+### FirstOrInit & FirstOrCreate：
+
+这两个函数在查询时非常有用。
+
++ FirstOrInit：查找符合条件的第一条记录，如果没有找到，就初始化一个符合条件的新对象（但不保存到数据库）。
+```go
+user := User{Name: "NonExistingUser"}
+db.FirstOrInit(&user)
+```
++ FirstOrCreate：查找符合条件的第一条记录，如果没有找到，就创建一个。
+```go
+user := User{Name: "NewUser"}
+db.FirstOrCreate(&user)
+```
+
+### 更新多个字段：
+
+可以同时更新多个字段。
+
+```go
+db.Model(&user).Updates(User{Name: "new_name", Age: 20})  // updates both name and age
+```
+
+或者使用 map：
+```go
+db.Model(&user).Updates(map[string]interface{}{"Name": "new_name", "Age": 21})
+```
+
+### 不更新某些字段：
+
+使用 `Omit` 函数，你可以在保存数据时跳过某些字段。
+
+```go
+db.Model(&user).Omit("Age").Updates(map[string]interface{}{"Name": "new_name", "Age": 21})
+```
+在这个例子中，尽管更新 map 中有 Age，但由于使用了 Omit，Age 不会被更新。
+
+### 查询链：
+
+你可以串联多个查询方法来构建更复杂的查询。
+
+```go
+db.Where("name LIKE ?", "John%").Or("name LIKE ?", "Bob%").Not("age = ?", 25).Order("created_at desc").Find(&users)
+```
+
+### 自定义主键：
+
+默认情况下，`gorm` 使用字段名为 `ID` 的字段作为主键。但你可以自定义主键。
+
+```go
+type User struct {
+    UserID   int    `gorm:"primaryKey"`
+    Username string
+}
+```
+
+### 表名约定：
+
+`gorm` 默认使用结构体的复数形式作为表名。但你可以自定义表名。
+
+```go
+func (User) TableName() string {
+    return "my_users"
+}
+```
+
+### 关联的外键和引用键：
+
+当定义关联模型时，你可以明确指定外键和引用键。
+
+```go
+type Profile struct {
+    ID     int
+    UserID int
+    User   User `gorm:"foreignKey:UserID;references:ID"`
+}
+```
+
+### 联合唯一索引：
+
+使用 `gorm`，你可以定义多列的联合唯一索引。
+
+```go
+type User struct {
+    gorm.Model
+    FirstName string
+    LastName  string
+    Email     string `gorm:"uniqueIndex:idx_email"`
+}
+
+type CalendarEvent struct {
+    gorm.Model
+    UserID   uint `gorm:"uniqueIndex:idx_user_date"`
+    EventDate string `gorm:"uniqueIndex:idx_user_date"`
+}
+```
 
