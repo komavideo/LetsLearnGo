@@ -520,3 +520,106 @@ type CalendarEvent struct {
 }
 ```
 
+### 使用 SQL 表达式：
+
+有时，你可能想在查询中使用原生的 `SQL` 表达式。使用 `gorm.Expr` 可以达到这个目的。
+
+```go
+db.Model(&product).Update("price", gorm.Expr("price * ?", 1.1)) // 将价格提高10%
+```
+
+### 删除与软删除：
+
++ 当你在模型中定义一个 `DeletedAt` 字段时，它将自动启用软删除功能。
+```go
+type User struct {
+    gorm.Model
+    Name string
+}
+```
++ 执行删除操作时，记录不会真正被删除，而是 DeletedAt 字段会被设置为当前时间。
+```go
+db.Delete(&user)
+```
++ 要永久删除记录，请使用 Unscoped。
+```go
+db.Unscoped().Delete(&user)
+```
+
+### 执行原生 SQL 查询：
+
+如果你需要执行一些不能通过 `gorm API` 表达的复杂查询，可以使用 `Raw` 方法。
+
+```go
+db.Raw("SELECT name FROM users WHERE age = ?", 20).Scan(&users)
+```
+
+### 开启与关闭连接池：
+
+`gorm` 默认为你提供了一个数据库连接池，你可以根据需要配置这个连接池。
+
+```go
+sqlDB, err := db.DB()
+
+// 设置最大的连接数量
+sqlDB.SetMaxOpenConns(100)
+
+// 设置最大的空闲连接数量
+sqlDB.SetMaxIdleConns(10)
+
+// 设置每个连接的生命周期
+sqlDB.SetConnMaxLifetime(time.Hour)
+```
+当不再需要数据库连接时，确保关闭连接池：
+```go
+sqlDB.Close()
+```
+
+### 使用事务：
+
+在某些情况下，你可能希望执行一系列的数据库操作，这些操作要么全部成功，要么全部失败。在这种情况下，你可以使用事务。
+
+```go
+err := db.Transaction(func(tx *gorm.DB) error {
+    if err := tx.Create(&user).Error; err != nil {
+        return err
+    }
+
+    if err := tx.Create(&profile).Error; err != nil {
+        return err
+    }
+
+    return nil
+})
+
+if err != nil {
+    // 事务失败
+}
+```
+
+### 设置全局作用域：
+
+如果你希望为每个查询都应用某个作用域，你可以设置一个全局作用域。
+
+```go
+db = db.Scopes(func(db *gorm.DB) *gorm.DB {
+    return db.Where("active = ?", true)
+})
+
+db.Find(&users) // 每次查询都会自动应用上面的作用域
+```
+
+### 启用和关闭日志记录：
+
+`gorm` 为你提供了很好的日志记录功能。如果你希望关闭日志记录，可以这样做：
+
+```go
+newLogger := logger.New(
+   log.New(os.Stdout, "\r\n", log.LstdFlags),
+   logger.Config{
+      LogLevel: logger.Silent,
+   },
+)
+db, _ := gorm.Open(sqlite.Open("test.db"), &gorm.Config{Logger: newLogger})
+```
+
