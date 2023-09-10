@@ -625,4 +625,112 @@ func main() {
 ### 处理 bufio.ErrTooLong 错误：
 当扫描的令牌超过最大令牌大小时，会得到一个 `bufio.ErrTooLong` 错误。当处理未知大小的输入数据时，特别是来自外部来源的数据时，很重要的一点是始终检查这个错误，并相应地处理它。
 
+### 使用 Scanner 读取文件：
+虽然前面我们已经介绍过了 `Scanner` 的使用，但在实际中，读取文件是一个非常常见的应用场景。
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, err := os.Open("sample.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "reading file:", err)
+	}
+}
+```
+
+### 使用 NewWriterSize 和 NewReaderSize 指定缓冲区大小：
+你可以使用这两个函数为读写器指定一个自定义的缓冲区大小：
+
+```go
+r := strings.NewReader("Hello, World!")
+reader := bufio.NewReaderSize(r, 4) // 使用4字节的缓冲区
+
+file, _ := os.Create("output.txt")
+writer := bufio.NewWriterSize(file, 4)  // 使用4字节的缓冲区
+```
+
+### 在网络编程中使用 ReadBytes 和 WriteBytes：
+在网络编程中，你可能会需要按字节读取和写入数据。以下是如何实现这一点：
+
+```go
+func handleConnection(conn net.Conn) {
+	defer conn.Close()
+
+	reader := bufio.NewReader(conn)
+	data, _ := reader.ReadBytes('\n')
+	fmt.Println("Received:", string(data))
+
+	writer := bufio.NewWriter(conn)
+	writer.Write([]byte("Acknowledge\n"))
+	writer.Flush()
+}
+```
+
+### 处理UTF-8输入：
+`bufio.Reader` 的 `ReadRune` 方法允许你按UTF-8字符读取输入：
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"strings"
+)
+
+func main() {
+	r := strings.NewReader("Hello, 世界!")
+	reader := bufio.NewReader(r)
+	for {
+		runeValue, _, err := reader.ReadRune()
+		if err != nil {
+			break
+		}
+		fmt.Printf("%#U\n", runeValue)
+	}
+}
+```
+
+### 在 Writer 中使用 Available 和 Buffered 方法：
+`Available` 方法返回缓冲区中未使用的字节数，而 `Buffered` 返回已写入缓冲区但尚未刷新到底层 `io.Writer` 的字节数。
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
+func main() {
+	file, _ := os.Create("bufferinfo.txt")
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+	fmt.Println("Available bytes:", writer.Available())
+
+	writer.WriteString("Hello, World!")
+	fmt.Println("Buffered bytes:", writer.Buffered())
+
+	writer.Flush()
+}
+```
 
