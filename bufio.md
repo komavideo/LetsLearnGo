@@ -734,3 +734,79 @@ func main() {
 }
 ```
 
+### 使用 Discard 快速丢弃数据：
+如果你只想从 `Reader` 丢弃一定数量的数据，而不需要实际读取它，你可以使用 `Discard` 函数。例如，从当前位置开始丢弃10个字节：
+
+```go
+reader.Discard(10)
+```
+
+### 在多个 Scanner 之间切换分割函数：
+根据输入数据的特点，你可能需要在不同的扫描模式之间切换：
+
+```go
+scanner := bufio.NewScanner(strings.NewReader("Line 1\nLine 2\nWord1 Word2"))
+scanner.Scan()
+fmt.Println(scanner.Text())  // 输出 "Line 1"
+
+scanner.Scan()
+fmt.Println(scanner.Text())  // 输出 "Line 2"
+
+scanner.Split(bufio.ScanWords)  // 切换到按单词扫描
+scanner.Scan()
+fmt.Println(scanner.Text())  // 输出 "Word1"
+```
+
+### 优雅地处理长行：
+当使用 `Scanner` 读取非常长的行时，你可能会遇到 `bufio.ErrTooLong`。为了处理这种情况，你可以逐步增加缓冲区大小：
+
+```go
+const initialBufSize = 4096
+scanner := bufio.NewScanner(r)
+buf := make([]byte, 0, initialBufSize)
+scanner.Buffer(buf, bufio.MaxScanTokenSize*10)  // 允许最大10倍于默认大小的令牌
+```
+
+### 使用 Reset 重置 Reader 或 Writer：
+如果你希望使用相同的 `Reader` 或 `Writer` 读取或写入不同的数据源或目标，可以使用 `Reset` 函数：
+
+```go
+r1 := strings.NewReader("Source 1")
+r2 := strings.NewReader("Source 2")
+
+reader := bufio.NewReader(r1)
+data, _ := reader.Peek(8)
+fmt.Println(string(data))  // 输出 "Source 1"
+
+reader.Reset(r2)
+data, _ = reader.Peek(8)
+fmt.Println(string(data))  // 输出 "Source 2"
+```
+
+### 为写入操作设置超时：
+虽然 `bufio.Writer` 本身没有超时功能，但你可以使用 `net.Conn` 的 `SetWriteDeadline` 方法为基于网络的写入设置超时：
+
+```go
+conn, _ := net.Dial("tcp", "example.com:80")
+conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+
+writer := bufio.NewWriter(conn)
+_, err := writer.WriteString("Hello, World!")
+if err != nil {
+    fmt.Println("Failed to write:", err)
+}
+writer.Flush()
+```
+
+### 手动管理缓冲区大小：
+使用 `bufio.ReaderSize` 和 `bufio.WriterSize`，你可以手动设置和管理缓冲区的大小。这可能对于调优某些特定的I/O-bound任务特别有用。
+
+### 使用 ReadLine 处理没有换行符的行：
+当输入数据可能不总是以换行符结束时，`ReadLine` 是一个非常有用的方法。它可以返回一个行，不论它是否以换行符结束。
+
+```go
+reader := bufio.NewReader(strings.NewReader("Line without newline"))
+line, isPrefix, _ := reader.ReadLine()
+fmt.Println(string(line), isPrefix)  // 输出 "Line without newline false"
+```
+
