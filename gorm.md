@@ -829,3 +829,98 @@ db.Callback().Query().Register("my_callback", func(scope *gorm.Scope) {
 })
 ```
 
+### 手动执行SQL：
+
+尽管`gorm`是一个`ORM`，但有时你可能想要手动执行`SQL`。`gorm` 提供了这个功能。
+
+```go
+var users []User
+db.Raw("SELECT name, age FROM users WHERE name = ?", "jinzhu").Scan(&users)
+```
+
+### 数据库迁移：
+
+使用`gorm`，你可以轻松地迁移你的数据库结构。
+
+```go
+// 自动迁移
+db.AutoMigrate(&User{}, &Product{})
+
+// 删除模型的表
+db.Migrator().DropTable(&User{})
+```
+
+### 使用 Pluck 提取一个列的值：
+
+如果你只想获取查询结果的一列，并且想将这列的值存放在一个切片中，你可以使用 `Pluck`。
+
+```go
+var ages []int64
+db.Model(&User{}).Pluck("age", &ages)
+```
+
+### 使用 Clauses 应用子句：
+
+有时，你可能想在查询中添加特定的子句。`Clauses` 允许你做这件事。
+
+```go
+tx := db.Clauses(clause.Locking{Strength: "UPDATE"}).Find(&users)
+```
+
+### 处理事务：
+
+使用 `gorm`，你可以容易地管理事务。
+
+```go
+err := db.Transaction(func(tx *gorm.DB) error {
+    if err := tx.Create(&User{Name: "Gin"}).Error; err != nil {
+        return err
+    }
+    if err := tx.Create(&User{Name: "Tonic"}).Error; err != nil {
+        return err
+    }
+    return nil
+})
+```
+
+### 使用 Save 更新记录：
+
+`Save` 方法会更新模型的所有字段，无论它们是否更改。
+
+```go
+user := User{Name: "Gin", Age: 27}
+db.Save(&user)
+```
+
+### 使用 Updates 方法部分更新：
+
+如果你只想更新模型的某些字段，你可以使用 `Updates`。
+
+```go
+db.Model(&user).Updates(User{Name: "Tonic", Age: 28})  // 不会更新空值字段
+```
+
+### 使用 UpdateColumn 直接更新：
+
+`UpdateColumn` 会直接更新这个值，忽略 `gorm` 的回调和 `UpdatedAt` 时间戳字段。
+
+```go
+db.Model(&user).UpdateColumn("name", "Vodka")
+```
+
+### 定义和使用复合主键：
+
+有时你可能需要使用复合主键。`gorm` 通过 `gorm:"primaryKey"` 标签来支持这一功能。
+
+```go
+type Subscription struct {
+    UserID    int `gorm:"primaryKey"`
+    CourseID  int `gorm:"primaryKey"`
+}
+```
+
+### 连接其他数据库：
+
+尽管我们之前看到的示例是基于`MySQL`的，但`gorm`支持多种数据库，例如`PostgreSQL`, `SQLite`, and `Microsoft SQL Server`。只需要改变连接字符串和驱动即可。
+
+
