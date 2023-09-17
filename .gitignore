@@ -21,3 +21,4 @@
 go.work
 main.go
 memo.md
+.DS_Store
