@@ -625,6 +625,134 @@ func main() {
 }
 ```
 
+### 贪婪匹配与非贪婪匹配:
+默认情况下，正则表达式的 `*`, `+`, 和 `?` 限定符都是贪婪的，这意味着它们会尽可能多地匹配。但是，您可以通过在限定符后面添加 `?` 来进行非贪婪匹配。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	greedy := regexp.MustCompile(`a.*b`)
+	fmt.Println(greedy.FindString("aabb")) // 输出: aabb
+
+	nonGreedy := regexp.MustCompile(`a.*?b`)
+	fmt.Println(nonGreedy.FindString("aabb")) // 输出: aab
+}
+```
+
+### 使用反斜杠转义特殊字符:
+正则表达式中的特殊字符（如 `*, +, ., ?`）需要使用 `\` 进行转义才能匹配其字面值。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\.`)
+	fmt.Println(re.MatchString(".")) // 输出: true
+	fmt.Println(re.MatchString("a")) // 输出: false
+}
+```
+
+### 编译多个正则表达式:
+在某些情况下，您可能需要同时处理多个正则表达式。使用 `Compile` 可以为每个正则表达式创建一个独立的对象。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	expressions := []string{`apple`, `banana`, `cherry`}
+	regexps := make([]*regexp.Regexp, len(expressions))
+
+	for i, expr := range expressions {
+		regexps[i] = regexp.MustCompile(expr)
+	}
+
+	test := "I like apple and cherry."
+	for _, re := range regexps {
+		if re.MatchString(test) {
+			fmt.Println("Matched:", re.String())
+		}
+	}
+}
+```
+
+### 使用 FindAllStringSubmatch 获取所有子匹配:
+这个函数会返回所有匹配，每个匹配都是一个字符串切片，其中第一个元素是完整的匹配，后面的元素是每个子匹配。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(\w+), (\w+)`)
+	allMatches := re.FindAllStringSubmatch("apple, pie; cherry, pie; peach, cobbler", -1)
+
+	for _, match := range allMatches {
+		fmt.Println("Full match:", match[0])
+		fmt.Println("First group:", match[1])
+		fmt.Println("Second group:", match[2])
+	}
+}
+```
+
+### 使用 SubexpNames 获取分组的名称:
+当您使用命名分组时，该方法会返回一个字符串切片，其中包含分组的名称。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(?P<First>\w+), (?P<Second>\w+)`)
+	names := re.SubexpNames()
+	fmt.Println(names) // 输出: ["", "First", "Second"]
+}
+```
+
+### 处理无效的正则表达式:
+使用 `Compile`（而不是 `MustCompile`）时，如果提供的正则表达式无效，将返回错误。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re, err := regexp.Compile("[")
+	if err != nil {
+		fmt.Println("Error compiling regex:", err)
+		return
+	}
+	fmt.Println(re.MatchString("test"))
+}
+```
+
 ### 
 
 ```go
