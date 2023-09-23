@@ -1272,3 +1272,135 @@ func main() {
 }
 ```
 
+### 在查找中设置限制:
+`FindAllString` 方法可以接受一个整数参数来限制返回的匹配数量。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\d+`)
+	fmt.Println(re.FindAllString("123 456 789 101112", 2)) // 输出: [123 456]
+}
+```
+
+### 匹配 Unicode 字符:
+在正则表达式中使用 `\p{L}` 可以匹配任何 `Unicode` 字母。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\p{L}+`)
+	fmt.Println(re.FindAllString("Hello 世界", -1)) // 输出: [Hello 世界]
+}
+```
+
+### 忽略大小写:
+使用 `(?i)` 可以在正则表达式中忽略大小写。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(?i)go`)
+	fmt.Println(re.MatchString("GOlang")) // 输出: true
+}
+```
+
+### 使用 Expand 方法:
+`Expand` 方法将模板应用于正则表达式的匹配，从而生成文本。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(?P<first>\w+) (?P<second>\w+)`)
+	src := []byte("Hello World")
+	template := []byte("First word: $first, Second word: $second")
+	dst := re.Expand(nil, template, src, re.FindSubmatchIndex(src))
+	fmt.Println(string(dst)) // 输出: First word: Hello, Second word: World
+}
+```
+
+### 匹配空字符串:
+某些正则表达式可能会匹配空字符串。为了避免这种情况，您可以使用 `Match` 方法进行检查。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`.*`)
+	if re.MatchString("") {
+		fmt.Println("Matches empty string!") // 输出: Matches empty string!
+	}
+}
+```
+
+### 查找前一个或后一个匹配:
+正则表达式本身没有内建的前一个或后一个匹配的功能。但可以通过编写特定的正则表达式或使用代码逻辑来实现。
+例如，为了找到某个单词 `"go"` 后面的单词，可以使用正则表达式 `go (\w+)`。
+
+### 使用 Equal 函数:
+`Equal` 函数可以检查两个正则表达式是否相等。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re1 := regexp.MustCompile(`go.*`)
+	re2 := regexp.MustCompile(`go.*`)
+	fmt.Println(re1.Equal(re2)) // 输出: true
+}
+```
+
+### 捕获和非捕获组:
+在正则表达式中，使用括号 `()` 可以创建一个捕获组。这允许您在后续的操作中引用该组。但有时，您可能只想使用括号来组合模式，而不实际捕获内容。这时，可以使用非捕获组 `?:`。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`go(?:lang)?`)
+	fmt.Println(re.MatchString("go"))      // 输出: true
+	fmt.Println(re.MatchString("golang"))  // 输出: true
+	fmt.Println(re.MatchString("golong"))  // 输出: false
+}
+```
+
+Done.
