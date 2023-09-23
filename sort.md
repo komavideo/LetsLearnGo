@@ -521,3 +521,63 @@ sort.Slice(students, func(i, j int) bool {
 	return students[i].Grade > students[j].Grade
 })
 ```
+
+### 28. 使用 IntSlice、StringSlice 和 Float64Slice 辅助类型
+`Go` 的 `sort` 包提供了一些辅助类型，如 `IntSlice`、`StringSlice` 和 `Float64Slice`，它们已经实现了 `sort.Interface` 的方法。这些类型可以将底层的基础数据类型转换为满足 `sort.Interface` 的对象。
+
+```go
+ints := []int{5, 3, 7, 1, 9}
+s := sort.IntSlice(ints)
+sort.Sort(s)
+fmt.Println(s) // [1, 3, 5, 7, 9]
+```
+
+### 29. 使用 Stable 方法确保稳定排序
+稳定排序保证了两个具有相同排序键的记录的相对顺序不变。`sort` 包提供了 `Stable` 方法来实现稳定排序。
+
+```go
+type Pair struct {
+	Value int
+	Key   string
+}
+
+pairs := []Pair{
+	{5, "banana"},
+	{2, "apple"},
+	{5, "cherry"},
+}
+
+sort.Stable(sort.SliceStable(pairs, func(i, j int) bool {
+	return pairs[i].Value < pairs[j].Value
+}))
+```
+在上面的示例中，虽然 `"banana"` 和 `"cherry"` 具有相同的值，但它们的相对顺序在排序后仍然保持不变。
+
+### 30. 使用 Search 为自定义数据结构查找元素
+你可以使用 `sort.Search` 函数为任何满足条件的元素查找位置，包括自定义数据结构。
+
+```go
+data := []Pair{
+	{2, "apple"},
+	{4, "banana"},
+	{6, "cherry"},
+	{8, "date"},
+}
+
+// 查找 Value 大于 5 的元素的位置
+index := sort.Search(len(data), func(i int) bool {
+	return data[i].Value > 5
+})
+
+if index < len(data) {
+	fmt.Println("Found:", data[index]) // Found: {6 cherry}
+}
+```
+
+### 31. sort 包与 container/heap 的结合
+如果你需要经常插入元素并保持排序，`sort` 包可能不是最有效的选择。这种情况下，可以考虑使用 `Go` 标准库中的 `container/heap` 包来实现一个优先队列。
+
+### 32. sort 包的局限性
+`sort` 包主要针对内存中的数据进行排序。如果你处理的数据量非常大，超出了内存的容量，那么你可能需要考虑使用外部排序算法或利用数据库来进行排序。
+
+Done.
