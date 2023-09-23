@@ -155,15 +155,71 @@ if index < len(ints) && ints[index] == 3 {
 }
 ```
 
-### 
+### 8. 对复数切片进行排序
+`Go` 的 `sort` 包没有为复数提供直接的排序功能，但你可以很容易地自己实现。例如，你可以基于复数的模值来进行排序：
 
 ```go
+package main
+
+import (
+	"fmt"
+	"sort"
+	"math/cmplx"
+)
+
+type ComplexSlice []complex128
+
+func (c ComplexSlice) Len() int           { return len(c) }
+func (c ComplexSlice) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+func (c ComplexSlice) Less(i, j int) bool { return cmplx.Abs(c[i]) < cmplx.Abs(c[j]) }
+
+func main() {
+	nums := []complex128{3 + 4i, 1 + 2i, 2 + 2i}
+	sort.Sort(ComplexSlice(nums))
+	fmt.Println(nums) // [1+2i 2+2i 3+4i]
+}
 ```
-### 
+
+### 9. 使用 sort.IsSorted
+除了之前提到的专门为 `int`, `float64` 和 `string` 切片设计的排序检查函数，`sort` 包还提供了一个更一般的函数 `IsSorted`，它可以接受任何满足 `sort.Interface` 的类型：
 
 ```go
+nums := []complex128{1 + 2i, 2 + 2i, 3 + 4i}
+fmt.Println(sort.IsSorted(ComplexSlice(nums))) // true
 ```
-### 
+
+### 10. 对关联数组 (map) 进行排序
+`Go` 的 `map` 是无序的，但有时你可能希望按键或值排序。虽然 `sort` 包不直接支持 `map`，但你可以通过转换为切片来达到目的：
 
 ```go
+package main
+
+import (
+	"fmt"
+	"sort"
+)
+
+func sortMapByKeys(m map[string]int) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func main() {
+	m := map[string]int{
+		"apple":  5,
+		"banana": 2,
+		"cherry": 8,
+	}
+
+	sortedKeys := sortMapByKeys(m)
+	for _, k := range sortedKeys {
+		fmt.Printf("%s: %d\n", k, m[k])
+	}
+}
 ```
+上面的代码将按照键的字母顺序输出 map 的内容。
+
