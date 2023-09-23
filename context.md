@@ -306,3 +306,118 @@ func doWork(ctx context.Context, ch chan struct{}) {
 ```
 上述代码模拟了一个耗时任务。如果 `context` 在任务完成之前过期或被取消，我们可以在 `<-ctx.Done()` 中执行任何必要的清理工作。
 
+### 将 context 与标准库中的其他包一起使用
+许多 `Go` 的标准库函数都接受 `context` 作为第一个参数，使得这些函数可以响应取消或超时的信号。例如，数据库和`HTTP`客户端常常会使用到这个特性。
+
+下面是使用 `http` 包发送请求并使用 `context` 的例子：
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"time"
+)
+
+func main() {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://www.example.com", nil)
+	if err != nil {
+		panic(err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println("Request failed:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("Response status:", resp.Status)
+}
+```
+在这个例子中，如果请求超过`2`秒没有响应，`DefaultClient.Do(req)` 会返回一个错误，通常是 `"context deadline exceeded"`。
+
+### 在自定义结构或类型中使用 context
+尽管通常建议将 `context` 作为函数的第一个参数传递，但有时你可能想在自定义的结构或类型中包含它，特别是在某些框架或库中。
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+)
+
+type Worker struct {
+	Ctx context.Context
+}
+
+func NewWorker(ctx context.Context) *Worker {
+	return &Worker{Ctx: ctx}
+}
+
+func (w *Worker) DoTask() {
+	if w.Ctx.Err() != nil {
+		fmt.Println("Task aborted due to:", w.Ctx.Err())
+		return
+	}
+	// ...执行任务逻辑...
+}
+
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	worker := NewWorker(ctx)
+
+	cancel() // 模拟外部取消
+	worker.DoTask()
+}
+```
+这种模式可以方便你在类型的多个方法之间共享和传递 `context`。
+
+### 并发地等待多个操作
+有时，你可能需要并发地启动多个操作，并在其中任何一个完成或失败时取消其它的操作。`errgroup` 与 `context` 配合使用，可以简化这种模式：
+
+```go
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"golang.org/x/sync/errgroup"
+	"time"
+)
+
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	g, ctx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		time.Sleep(3 * time.Second)
+		return errors.New("task 1 failed")
+	})
+
+	g.Go(func() error {
+		select {
+		case <-time.After(5 * time.Second):
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	})
+
+	if err := g.Wait(); err != nil {
+		fmt.Println("Received error:", err)
+	}
+}
+```
+
+`errgroup` 可以确保当其中一个 `goroutine` 返回错误时，其它的 `goroutine` 会通过 `context` 取消。
+
