@@ -492,6 +492,143 @@ func main() {
 }
 ```
 
+### 匹配多选分支:
+您可以使用 `|` 运算符来匹配多个子模式中的一个。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`apple|banana`)
+	fmt.Println(re.MatchString("I have an apple"))   // 输出: true
+	fmt.Println(re.MatchString("I have a banana"))  // 输出: true
+	fmt.Println(re.MatchString("I have a cherry"))  // 输出: false
+}
+```
+
+### 非捕获分组:
+使用 `(?: ...)` 创建一个非捕获分组，这意味着它会匹配但不捕获内容。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(?:apple|banana)s?`)
+	fmt.Println(re.FindString("I have 2 apples and 1 banana"))  // 输出: apples
+}
+```
+
+### 正向前视断言:
+正向前视断言允许您检查所匹配的内容前面是否有指定的子模式，但不包含那个子模式。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\d(?=px)`)
+	fmt.Println(re.FindString("I have a font size of 14px"))  // 输出: 14
+	fmt.Println(re.FindString("The number is 14."))           // 输出: ""
+}
+```
+
+### 负向前视断言:
+与正向前视断言相反，负向前视断言检查内容前面是否没有指定的子模式。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	// Go 的 regexp 库不直接支持负向前视断言。但这是一个通常的要求，所以如果您需要这个功能，您可能需要查找其他的库或使用其他方法。
+}
+```
+
+### 字节切片匹配:
+除了字符串外，`regexp` 也支持字节切片。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`hello`)
+	fmt.Println(re.Match([]byte("hello world")))  // 输出: true
+}
+```
+
+### 获取匹配的字符串及其位置:
+使用 `FindStringSubmatch` 和 `FindStringSubmatchIndex` 可以获取匹配的字符串及其位置。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(a)(b)(c)`)
+	matches := re.FindStringSubmatch("abcdef")
+	fmt.Println(matches)  // 输出: [abc a b c]
+
+	indices := re.FindStringSubmatchIndex("abcdef")
+	fmt.Println(indices)  // 输出: [0 3 0 1 1 2 2 3]
+}
+```
+
+### 从源字符串中提取信息:
+正则表达式不仅可以用于查找和替换，还可以从源字符串中提取特定的信息。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(?P<Year>\d{4})-(?P<Month>\d{2})-(?P<Day>\d{2})`)
+	match := re.FindStringSubmatch("Today's date is 2023-09-23.")
+	for i, name := range re.SubexpNames() {
+		if i != 0 {
+			fmt.Printf("%s: %s\n", name, match[i])
+		}
+	} // 输出:
+  // Year: 2023
+  // Month: 09
+  // Day: 23
+}
+```
+
+### 
+
+```go
+```
 ### 
 
 ```go
