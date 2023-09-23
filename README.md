@@ -16,6 +16,7 @@
 + [使用math库](/math.md)
 + [使用os库](/os.md)
 + [使用rand库](/rand.md)
++ [使用sort库](/sort.md)
 + [使用strings库](/strings.md)
 + [使用strconv库](/strconv.md)
 + [使用text/template库](/text_template.md)
