@@ -632,3 +632,28 @@ doSomething(ctx)
 cancel() // 释放与ctx相关的资源
 ```
 
+### context 的设计哲学
+理解 `context` 的设计哲学可以帮助你更好地使用它。`context` 主要是为了共享跨 `API` 边界的超时、取消信号以及请求范围的元数据。它不是用来传递函数的可选参数，也不是用来存储全局状态或函数的返回值的。
+
+### 在中间件中使用 context
+在 `Web` 服务器或其他中间件中，`context` 可用于保存并传递与请求相关的数据，如请求 `ID`、认证数据等。
+
+```go
+func middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), "requestID", "123456")
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+```
+
+### context 的并发安全性
+`context` 本身是并发安全的，可以在多个 `Go` 例程之间共享而无需额外的锁。但请注意，从 `context` 中取出的值可能不是并发安全的，需要你自己确保安全的访问。
+
+### 不要修改 context 的内部结构
+虽然可以通过类型断言和反射来探索 `context` 的内部结构，但这样做是不推荐的。`context` 的具体实现可能会在未来的 `Go` 版本中发生变化。总是使用官方的 `API` 来与 `context` 交互。
+
+### 尽量减少创建 context 的次数
+每次调用 `context.WithCancel`、`context.WithDeadline`、`context.WithTimeout` 或 `context.WithValue` 都会创建新的 `context` 对象。如果你在循环或频繁调用的函数中这样做，可能会增加不必要的开销。考虑是否可以复用已有的 `context` 或将其创建移到循环或函数的外部。
+
+到此为止，我们已经涵盖了 `Go` 的 `context` 库的大部分重要和高级概念。正如你所看到的，`context` 提供了一个强大且灵活的工具，使你可以在 `Go` 应用程序中管理并发、超时和取消操作，以及传递请求范围的元数据。使用它时，重要的是始终遵循最佳实践，并确保你的代码保持简洁和可维护。
