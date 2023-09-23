@@ -897,6 +897,108 @@ func main() {
 }
 ```
 
+### 使用反向引用:
+在 `Go` 的正则表达式中，您可以使用 `\1`、`\2` 等来引用先前捕获的分组。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(a)b\1`) // 这会匹配 'aba'
+	fmt.Println(re.MatchString("aba"))  // 输出: true
+	fmt.Println(re.MatchString("abb"))  // 输出: false
+}
+```
+
+### 匹配 Unicode 字符:
+使用 `\p{Sc}` 可以匹配货币符号，而 `\p{L}` 可以匹配任何字母。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\p{L}+`)
+	fmt.Println(re.FindAllString("你好, world!", -1)) // 输出: [你好 world]
+}
+```
+
+### 预处理常用正则表达式:
+在实际应用中，您可能会重复使用某些正则表达式。预编译这些正则表达式可以提高性能。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+var (
+	emailRegex    = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	phoneNumberRegex = regexp.MustCompile(`^\+?[0-9\-]+\(?[0-9]+\)?[0-9\-]+[0-9]$`)
+)
+
+func main() {
+	fmt.Println(emailRegex.MatchString("test@example.com"))    // 输出: true
+	fmt.Println(phoneNumberRegex.MatchString("+123-456-7890")) // 输出: true
+}
+```
+
+### 匹配单词边界:
+`\b` 用于匹配单词的边界，这使得您可以准确地匹配整个单词，而不是部分单词。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\bgo\b`)
+	fmt.Println(re.MatchString("go"))       // 输出: true
+	fmt.Println(re.MatchString("golang"))   // 输出: false
+	fmt.Println(re.MatchString("let's go!")) // 输出: true
+}
+```
+
+### 使用命名分组:
+使用命名分组可以使正则表达式更加清晰，并在后续处理中提供更有意义的引用。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})`)
+	match := re.FindStringSubmatch("2023-09-23")
+	for i, name := range re.SubexpNames() {
+		if i != 0 && name != "" {
+			fmt.Printf("%s: %s\n", name, match[i])
+		}
+	}
+	// 输出:
+	// year: 2023
+	// month: 09
+	// day: 23
+}
+```
+
 ### 
 
 ```go
