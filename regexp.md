@@ -999,7 +999,131 @@ func main() {
 }
 ```
 
-### 
+### 匹配字符串的开始和结束位置:
+在非多行模式下，`^` 和 `$` 分别匹配字符串的开始和结束位置。
 
 ```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`^start|end$`)
+	fmt.Println(re.FindAllString("start of the string end", -1)) // 输出: [start end]
+}
+```
+
+### 在替换中使用函数:
+您可以使用 `ReplaceAllStringFunc` 方法在替换时执行一些逻辑。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+	"strings"
+)
+
+func main() {
+	re := regexp.MustCompile(`\w+`)
+	result := re.ReplaceAllStringFunc("Hello World", func(s string) string {
+		return strings.ToUpper(s)
+	})
+	fmt.Println(result) // 输出: HELLO WORLD
+}
+```
+
+### 替换中的反向引用:
+在替换字符串中，您可以使用 `$1`、`$2` 等来引用正则表达式中的分组。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(\w+) (\w+)`)
+	fmt.Println(re.ReplaceAllString("Hello World", "$2 $1")) // 输出: World Hello
+}
+```
+
+### 使用正向和负向前视断言:
+注意：`Go` 的 `regexp` 包不支持前视断言。但为了完整性，我还是想提一下这个概念。在许多其他语言和正则表达式引擎中，前视断言允许您进行匹配，但不消费任何字符。
+例如, `x(?=y)` 会匹配 `x` 只有当 `x` 后面跟着 `y`。这是正向前视断言。与之相对的是负向前视断言 `x(?!y)`，它会匹配 `x` 只有当 `x` 后面没有跟着 `y`。
+
+### 获取编译正则表达式的字符串:
+您可以使用 `String` 方法获取编译后的正则表达式字符串。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`hello.*world`)
+	fmt.Println(re.String()) // 输出: hello.*world
+}
+```
+
+### 使用 LiteralPrefix:
+这个函数返回一个字符串和一个布尔值。如果正则表达式可以被解释为一个简单的字符串查找，则返回的字符串是该查找字符串，布尔值为 `true`。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`hello`)
+	prefix, complete := re.LiteralPrefix()
+	fmt.Println(prefix, complete) // 输出: hello true
+}
+```
+
+### 查找字符串中所有非重叠匹配:
+使用 `FindAll` 和 `FindAllString` 可以查找所有的匹配。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`a.`)
+	fmt.Println(re.FindAllString("ab ac ad ae", -1)) // 输出: [ab ac ad ae]
+}
+```
+
+### 查找和匹配的区别:
+在 `Go` 中，查找和匹配的函数有所不同。查找函数 (如 `FindString`) 返回匹配的字符串，而匹配函数 (如 `MatchString`) 返回一个布尔值，表示是否找到了匹配项。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`go`)
+	fmt.Println(re.FindString("golang"))  // 输出: go
+	fmt.Println(re.MatchString("golang")) // 输出: true
+}
 ```
