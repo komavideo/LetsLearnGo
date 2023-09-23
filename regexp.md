@@ -245,6 +245,134 @@ func main() {
 }
 ```
 
+### 替换匹配的部分内容:
+您可以使用 `ReplaceAllStringFunc` 方法来替换匹配到的字符串。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+	"strings"
+)
+
+func main() {
+	re := regexp.MustCompile(`\w+`)
+	result := re.ReplaceAllStringFunc("hello world", strings.ToUpper)
+	fmt.Println(result) // 输出: HELLO WORLD
+}
+```
+
+### 匹配任意数字:
+使用 `\d` 可以匹配任意数字。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\d+`)
+	fmt.Println(re.MatchString("12345")) // 输出: true
+}
+```
+
+### 匹配非数字字符:
+使用 `\D` 可以匹配任意非数字字符。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\D+`)
+	fmt.Println(re.MatchString("abc")) // 输出: true
+}
+```
+
+### 匹配单词边界:
+`\b` 表示单词的边界。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\bGo\b`)
+	fmt.Println(re.MatchString("Go is great!")) // 输出: true
+	fmt.Println(re.MatchString("Going on a trip")) // 输出: false
+}
+```
+
+### 查找特定长度的匹配:
+使用 `{min,max}` 可以匹配特定长度的字符。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\d{2,4}`)
+	fmt.Println(re.FindString("123"))    // 输出: 123
+	fmt.Println(re.FindString("12345"))  // 输出: 1234
+}
+```
+
+### 匹配行的开始与结束:
+`^` 表示行的开始，`$` 表示行的结束。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`^hello`)
+	fmt.Println(re.MatchString("hello world")) // 输出: true
+	fmt.Println(re.MatchString("world hello")) // 输出: false
+}
+```
+
+### 字符类匹配:
+使用 `[]` 可以创建字符类。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`[aeiou]`)
+	fmt.Println(re.FindAllString("hello world", -1)) // 输出: [e o o]
+}
+```
+
+### 
+
+```go
+```
 ### 
 
 ```go
