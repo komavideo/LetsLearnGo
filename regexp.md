@@ -1127,3 +1127,148 @@ func main() {
 	fmt.Println(re.MatchString("golang")) // 输出: true
 }
 ```
+
+### 匹配多行文本:
+在多行模式下，`^` 和 `$` 分别匹配文本的每一行的开始和结束位置。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(?m)^text`)
+	matches := re.FindAllString("text line1\ntext line2", -1)
+	fmt.Println(matches) // 输出: [text text]
+}
+```
+
+### 查找字符串的索引:
+使用 `FindStringIndex` 可以查找匹配项在原始字符串中的开始和结束位置。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`go`)
+	indices := re.FindStringIndex("Let's go, gopher!")
+	fmt.Println(indices) // 输出: [6 8]
+}
+```
+
+### 查找所有子匹配的索引:
+使用 `FindAllStringSubmatchIndex` 可以查找所有子匹配项在原始字符串中的位置。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(\w+)(,|\.|\!)`)
+	indices := re.FindAllStringSubmatchIndex("Hello, world! How are you?", -1)
+	fmt.Println(indices) // 输出: [[0 6 5 6] [13 14 13 14] [20 21 20 21]]
+}
+```
+
+### 分割字符串:
+使用 `Split` 方法可以根据正则表达式来分割字符串。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\s+`)
+	parts := re.Split("Hello\tworld\nGo\tgopher", -1)
+	fmt.Println(parts) // 输出: [Hello world Go gopher]
+}
+```
+
+### 使用 FindReaderIndex 和 FindReaderSubmatchIndex:
+这两个方法允许您从提供的 `io.RuneReader` 中找到匹配项的索引。这在处理大型文件或流式输入时非常有用。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+	"strings"
+)
+
+func main() {
+	re := regexp.MustCompile(`go`)
+	reader := strings.NewReader("Let's go, gopher!")
+	indices := re.FindReaderIndex(reader)
+	fmt.Println(indices) // 输出: [6 8]
+}
+```
+
+### 使用 QuoteMeta:
+这个函数返回一个字符串，其中所有正则表达式元字符都被转义，使它们被视为字面字符串。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	fmt.Println(regexp.QuoteMeta(`.*+?^$[](){}`)) // 输出: \.\*\+\?\^\$\[\]\(\)\{\}
+}
+```
+
+### 使用 SubexpNames:
+这个方法返回编译正则表达式中的子表达式名。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(?P<first>\w+) (?P<second>\w+)`)
+	names := re.SubexpNames()
+	fmt.Println(names) // 输出: []string{"", "first", "second"}
+}
+```
+
+### 查找最长的不重叠匹配:
+在默认情况下，正则表达式引擎在找到第一个匹配后就会停止。但使用 `Longest` 方法可以改变这种行为，使其找到最长的匹配。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`a*`)
+	re.Longest()
+	fmt.Println(re.FindString("aaaaaab")) // 输出: aaaaaa
+}
+```
+
