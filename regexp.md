@@ -369,10 +369,129 @@ func main() {
 }
 ```
 
-### 
+### 否定字符类:
+使用 `[^...]` 可以匹配除指定字符之外的任意字符。
 
 ```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`[^aeiou]`)
+	fmt.Println(re.FindAllString("hello world", -1)) // 输出: [h l l  w r l d]
+}
 ```
+
+### 匹配 Unicode 字符:
+您可以使用 `\p` 和 `\P` 来匹配 `Unicode` 字符类。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\p{L}`) // 匹配任何字母
+	fmt.Println(re.FindAllString("你好, world!", -1)) // 输出: [你 好 w o r l d]
+}
+```
+
+### 查找所有匹配的数量限制:
+使用 `FindAll...` 函数时，您可以指定一个非负的整数来限制返回的匹配数量。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\w+`)
+	fmt.Println(re.FindAllString("hello world, go is great", 2)) // 输出: [hello world]
+}
+```
+
+### 替换匹配的部分内容，并引用匹配的内容:
+使用 `$1, $2,...` 来引用正则表达式中的分组。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(\w+) (\w+)`)
+	result := re.ReplaceAllString("hello world", "$2 $1")
+	fmt.Println(result) // 输出: world hello
+}
+```
+
+### 拆分字符串:
+使用 `Split` 方法可以根据正则表达式拆分字符串。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\s+`)
+	fmt.Println(re.Split("hello\tworld  go is great", -1)) // 输出: [hello world go is great]
+}
+```
+
+### 使用 Match 和 MatchString:
+这两个函数用于检查字节切片或字符串是否与正则表达式匹配，但不返回实际匹配的内容。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`hello`)
+	fmt.Println(re.Match([]byte("hello world")))   // 输出: true
+	fmt.Println(re.MatchString("hello world"))    // 输出: true
+	fmt.Println(re.MatchString("world goodbye"))  // 输出: false
+}
+```
+
+### 匹配开始和结束的字符串或单词:
+使用 `^` 和 `$` 可以匹配字符串的开始和结束，而 `\b` 可以匹配单词的开始和结束。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`^go\b`)
+	fmt.Println(re.MatchString("go is great"))  // 输出: true
+	fmt.Println(re.MatchString("going on"))     // 输出: false
+}
+```
+
 ### 
 
 ```go
