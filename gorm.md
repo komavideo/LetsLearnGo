@@ -923,4 +923,104 @@ type Subscription struct {
 
 尽管我们之前看到的示例是基于`MySQL`的，但`gorm`支持多种数据库，例如`PostgreSQL`, `SQLite`, and `Microsoft SQL Server`。只需要改变连接字符串和驱动即可。
 
+### 使用Scopes方法自定义查询：
 
+`Scopes` 可以将常用的查询逻辑提取为方法，这样你可以轻松地重用它们。
+
+```go
+func ActiveUsers(db *gorm.DB) *gorm.DB {
+    return db.Where("active = ?", true)
+}
+
+db.Scopes(ActiveUsers).Find(&users)
+```
+
+### 使用Set方法在当前db实例上设置参数：
+
+你可以使用 `Set` 方法来存储和检索上下文数据，这对于中间件非常有用。
+
+```go
+db = db.Set("gorm:table_options", "CHARSET=utf8mb4")
+db.CreateTable(&users)
+```
+
+### 使用Joins进行连接查询：
+
+`Joins` 方法允许你执行连接查询。
+
+```go
+type Result struct {
+    UserName string
+    Email    string
+}
+
+var results []Result
+db.Table("users").Select("users.name, emails.email").Joins("left join emails on emails.user_id = users.id").Scan(&results)
+```
+
+### 使用Debug打印SQL查询：
+
+你可以通过在查询链中添加`Debug`方法来打印出实际执行的`SQL`语句。
+
+```go
+db.Debug().Where("name = ?", "jinzhu").First(&User{})
+```
+
+### 设置gorm的日志模式：
+
+`gorm`默认不显示`SQL`日志，但你可以通过设置其日志模式来启用它。
+
+```go
+newLogger := logger.New(
+    log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+    logger.Config{
+        SlowThreshold: time.Second,   // 慢 SQL 阈值
+        LogLevel:      logger.Info,  // 日志级别
+        Colorful:      true,         // 禁用彩色打印
+    },
+)
+
+db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{
+    Logger: newLogger,
+})
+```
+
+### 使用Take获取一条记录：
+
+与`First`方法类似，`Take`也返回匹配的第一条记录，但它不接受任何排序。
+
+```go
+db.Take(&user)
+```
+
+### 使用Last获取最后一条记录：
+
+你可以使用`Last`方法获取最后一条记录。
+
+```go
+db.Last(&user)
+```
+
+### 使用Omit在保存记录时排除字段：
+
+如果你想在保存模型时跳过某些字段，可以使用`Omit`。
+
+```go
+db.Omit("CreatedAt").Create(&user)
+```
+
+### 使用Select指定查询的字段：
+
+如果你只关心表中的某些字段，可以使用`Select`来限制查询的字段。
+
+```go
+db.Select("name", "age").Find(&users)
+```
+
+### 使用Clauses应用SQL子句：
+
+`Clauses`方法允许你添加原始`SQL`子句。
+
+```go
+db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&user)
+```
