@@ -202,3 +202,107 @@ func main() {
 ```
 上述代码将输出 `"context deadline exceeded"`，因为 `timeoutCtx` 在`2`秒的 `time.After` 完成之前超时了。
 
+### context 的传播
+当你在一个系统中工作，尤其是在微服务架构中，经常需要将上下文从一个部分传递到另一个部分，例如从一个服务传递到另一个服务。这是为了确保跟踪、日志或其他有关请求的信息能够在整个流程中被保留和观察。
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+)
+
+type keyType string
+
+func main() {
+	key := keyType("userID")
+	ctx := context.WithValue(context.Background(), key, "12345")
+
+	processRequest(ctx)
+}
+
+func processRequest(ctx context.Context) {
+	if userID, ok := ctx.Value(keyType("userID")).(string); ok {
+		fmt.Println("Processing request for user:", userID)
+	}
+	// ...其他处理逻辑...
+}
+```
+
+### 避免存储可变对象
+当使用 `context.WithValue` 时，应该避免存储在 `context` 中的值是可以变的。如果你需要传递一个可变对象，最好传递该对象的副本或使用其他方法。
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+)
+
+type keyType string
+type user struct {
+	name string
+}
+
+func main() {
+	u := &user{name: "Alice"}
+	ctx := context.WithValue(context.Background(), keyType("user"), u)
+
+	// 不建议修改存储在 context 中的值
+	u.name = "Bob"
+
+	displayUser(ctx)
+}
+
+func displayUser(ctx context.Context) {
+	if u, ok := ctx.Value(keyType("user")).(*user); ok {
+		fmt.Println("User name:", u.name) // 输出 "User name: Bob"
+	}
+}
+```
+在上面的例子中，我们修改了存储在 `context` 中的 `user` 对象，这通常是不推荐的。
+
+### 优雅的处理取消
+当 `context` 被取消时，可以优雅地关闭资源或完成必要的清理工作。
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"time"
+)
+
+func main() {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	ch := make(chan struct{})
+
+	go doWork(ctx, ch)
+
+	select {
+	case <-ch:
+		fmt.Println("Work finished!")
+	case <-ctx.Done():
+		fmt.Println("Context expired:", ctx.Err())
+	}
+}
+
+func doWork(ctx context.Context, ch chan struct{}) {
+	// 模拟工作
+	time.Sleep(500 * time.Millisecond)
+
+	select {
+	case ch <- struct{}{}:
+	case <-ctx.Done():
+		// 清理工作或释放资源
+		return
+	}
+}
+```
+上述代码模拟了一个耗时任务。如果 `context` 在任务完成之前过期或被取消，我们可以在 `<-ctx.Done()` 中执行任何必要的清理工作。
+
