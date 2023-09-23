@@ -421,3 +421,84 @@ func main() {
 
 `errgroup` 可以确保当其中一个 `goroutine` 返回错误时，其它的 `goroutine` 会通过 `context` 取消。
 
+### 注意 context 的继承性
+当你从一个已有的 `context` 创建新的 `context` 时，新的 `context` 会继承父 `context` 的属性。例如，如果父 `context` 被取消，所有从它派生出来的子 `context` 也会被取消。
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"time"
+)
+
+func main() {
+	parentCtx, parentCancel := context.WithCancel(context.Background())
+
+	childCtx, _ := context.WithTimeout(parentCtx, 5*time.Second)
+
+	go func() {
+		<-parentCtx.Done()
+		fmt.Println("Parent context cancelled")
+	}()
+
+	go func() {
+		<-childCtx.Done()
+		fmt.Println("Child context done:", childCtx.Err())
+	}()
+
+	time.Sleep(2 * time.Second)
+	parentCancel() // 取消父 context
+
+	time.Sleep(3 * time.Second) // 使输出更清晰
+}
+```
+在这个示例中，我们首先创建了一个可取消的 `parentCtx`。然后我们从 `parentCtx` 创建了一个带有超时的 `childCtx`。当我们取消 `parentCtx` 时，`childCtx` 也会因为继承关系被取消。
+
+### 避免过度使用 context.Value
+尽管 `context.Value` 可用于传递跨 `API` 的值，但它并不是为大量或复杂数据传递而设计的。过度使用它可能会使代码变得难以维护和理解。当你需要传递大量数据时，考虑使用其他机制，如参数、接收者或全局变量。
+
+### context 的正确传递
+在将 `context` 传递给函数或方法时，通常应将其作为第一个参数。这是一个广为接受的惯例，有助于提高代码的可读性和一致性。
+
+```go
+func doSomething(ctx context.Context, arg1 int, arg2 string) {
+	// ...
+}
+```
+
+### 清理资源
+使用 `context` 的一个重要用例是确保在操作被取消或超时时释放资源。这包括关闭数据库连接、释放文件句柄、取消网络请求等。
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"time"
+)
+
+func main() {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	req, _ := http.NewRequestWithContext(ctx, "GET", "https://www.example.com", nil)
+
+	go func() {
+		_, err := http.DefaultClient.Do(req)
+		if err != nil {
+			fmt.Println("Failed to complete the request:", err)
+		}
+	}()
+
+	<-ctx.Done()
+
+	// 当 context 完成时，我们可以执行额外的清理工作
+	// 例如: 释放资源、关闭连接等
+	fmt.Println("Context finished:", ctx.Err())
+}
+```
+
