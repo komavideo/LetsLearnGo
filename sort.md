@@ -433,3 +433,91 @@ indexInt := sort.SearchInts(ints, 4)
 fmt.Println(indexInt) // 3
 ```
 
+### 23. 对 map 类型排序
+`Go` 的 `map` 类型不保证顺序，但有时你可能想要基于 `map` 的键或值进行排序。以下是如何根据 `map` 的键进行排序：
+
+```go
+m := map[string]int{
+	"banana": 2,
+	"apple":  3,
+	"cherry": 1,
+}
+
+// 获取键并排序
+keys := make([]string, 0, len(m))
+for k := range m {
+	keys = append(keys, k)
+}
+sort.Strings(keys)
+
+for _, k := range keys {
+	fmt.Println(k, m[k])
+}
+```
+
+### 24. 对 map 的值排序
+与上面类似，但是这次是基于值进行排序：
+
+```go
+type kv struct {
+	Key   string
+	Value int
+}
+
+var sorted []kv
+for k, v := range m {
+	sorted = append(sorted, kv{k, v})
+}
+
+sort.Slice(sorted, func(i, j int) bool {
+	return sorted[i].Value < sorted[j].Value
+})
+
+for _, item := range sorted {
+	fmt.Println(item.Key, item.Value)
+}
+```
+
+### 25. 使用 sort.IsSorted
+该函数检查提供的数据是否已经排序。这对于检查一个 `sort.Interface` 类型的数据是否已经排好序很有用。
+
+```go
+ints := []int{1, 2, 3, 5, 4}
+fmt.Println(sort.IsSorted(sort.IntSlice(ints))) // false
+```
+
+### 26. 对切片的部分进行排序
+假设你只想对切片中的某一部分进行排序，你可以使用内置的切片技巧来做到这一点：
+
+```go
+ints = []int{3, 2, 1, 7, 6, 5, 8, 9}
+sort.Ints(ints[3:6]) // 只对 [7, 6, 5] 这部分进行排序
+fmt.Println(ints)   // [3, 2, 1, 5, 6, 7, 8, 9]
+```
+
+### 27. 复杂数据结构排序
+如果你有一个更复杂的数据结构并且需要考虑多个排序条件，你可以链式调用比较操作，例如：
+
+```go
+type Student struct {
+	Name  string
+	Grade int
+	Age   int
+}
+
+students := []Student{
+	{"John", 90, 20},
+	{"Doe", 85, 21},
+	{"Jane", 90, 22},
+}
+
+sort.Slice(students, func(i, j int) bool {
+	if students[i].Grade == students[j].Grade {
+		if students[i].Age == students[j].Age {
+			return students[i].Name < students[j].Name
+		}
+		return students[i].Age < students[j].Age
+	}
+	return students[i].Grade > students[j].Grade
+})
+```
