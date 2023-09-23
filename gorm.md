@@ -1129,3 +1129,128 @@ db.Where("name = ?", "jinzhu").Or("name = ?", "jinzha").Find(&users)
 db.Model(&user).Select("Name", "Age").Updates(map[string]interface{}{"Name": "jinzhu", "Age": 30})
 ```
 
+### 关联记录的查询：
+
+`gorm` 提供了一种简洁的方式来查询和操作模型的关联。
+
+```go
+type User struct {
+    ID   uint
+    Name string
+    Orders []Order
+}
+
+type Order struct {
+    ID     uint
+    UserID uint
+    Total  float64
+}
+
+var user User
+db.Preload("Orders").Find(&user, "id = ?", 1)
+```
+使用`Preload`会自动加载用户的所有订单。
+
+### 关联记录的创建：
+
+当创建记录时，也可以同时创建其关联的记录。
+
+```go
+user := User{
+    Name: "Jinzhu",
+    Orders: []Order{
+        {Total: 100.0},
+        {Total: 200.0},
+    },
+}
+
+db.Create(&user)
+```
+
+### 使用Related查询关联数据：
+
+可以使用 `Related` 方法来查询关联的数据。
+
+```go
+var orders []Order
+db.Model(&user).Related(&orders)
+```
+
+### 使用FirstOrInit和FirstOrCreate：
+
+`FirstOrInit` 会返回匹配的第一条记录，或返回一个新的（未保存的）记录。而 `FirstOrCreate` 会返回匹配的第一条记录，或创建一个新的记录。
+
+```go
+user := User{Name: "non_existing"}
+db.FirstOrInit(&user)
+db.FirstOrCreate(&user)
+```
+
+### Raw和Exec执行原始SQL：
+
+你可以使用 `Raw` 来执行原始的`SQL`查询，而 `Exec` 用于执行没有返回值的`SQL`语句。
+
+```go
+var result string
+db.Raw("SELECT name FROM users WHERE id = ?", 1).Scan(&result)
+
+db.Exec("UPDATE users SET name = ? WHERE id = ?", "jinzhu", 1)
+```
+
+### 使用Set存储内部数据：
+
+你可以使用 `Set` 方法来存储一次性的设置。
+
+```go
+db.Set("gorm:association_autoupdate", false).Save(&user)
+```
+
+### 使用Begin和Commit进行事务操作：
+
+`gorm` 支持常见的事务操作。
+
+```go
+tx := db.Begin()
+defer func() {
+    if r := recover(); r != nil {
+        tx.Rollback()
+    }
+}()
+
+if err := tx.Create(&user).Error; err != nil {
+    tx.Rollback()
+    return
+}
+
+tx.Commit()
+```
+
+### 使用Association处理关联：
+
+`Association` 是一个辅助方法，允许你进行关联数据的各种操作。
+
+```go
+user := User{ID: 1}
+db.Model(&user).Association("Orders").Append([]Order{{Total: 100.0}, {Total: 200.0}})
+```
+
+### 使用Attrs和Assign为对象设置属性：
+
+使用 `Attrs` 和 `Assign` 可以为模型设置属性。
+
+```go
+user := User{Name: "Jinzhu"}
+db.FirstOrCreate(&user, User{Name: "non_existing"}).Attrs(User{Age: 20}).FirstOrCreate(&user)
+```
+
+### 错误处理：
+使用 `Error` 属性来获取数据库操作的错误信息。
+
+```go
+result := db.First(&user)
+if result.Error != nil {
+    fmt.Println(result.Error)
+}
+```
+
+Done.
