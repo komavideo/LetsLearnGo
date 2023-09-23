@@ -581,3 +581,54 @@ func SomeFunction() {
 
 如果你发现自己经常需要在结构体中存储 `context`，那么可能是你的设计需要重新思考。
 
+### context.WithValue 的使用场景
+虽然我们已经提到了避免过度使用 `context.Value`，但了解它的合适使用场景是很有价值的。`context.WithValue` 主要用于跨 `API` 或函数传递请求范围内的元数据或某些不容易通过常规参数传递的数据。
+
+例如，传递请求 `ID`、认证令牌或用户信息：
+
+```go
+type contextKey string
+
+func main() {
+	ctx := context.WithValue(context.Background(), contextKey("requestID"), "12345")
+	doSomething(ctx)
+}
+
+func doSomething(ctx context.Context) {
+	reqID, ok := ctx.Value(contextKey("requestID")).(string)
+	if ok {
+		fmt.Println("Request ID:", reqID)
+	}
+}
+```
+注意我们使用自定义类型 `contextKey` 作为键，这是为了避免潜在的键冲突。
+
+### context 和错误处理
+`context` 可以用来取消操作，但它不能替代错误处理。当 `context` 表示已完成（如超时或取消）时，你通常还需要检查函数或操作的错误返回值以获取更具体的错误原因。
+
+### 嵌套 context
+虽然可以嵌套使用多个 `context`，但这通常是不必要的。当你从一个 `context` 创建另一个时，新的 `context` 会继承旧的 `context` 的行为。例如，如果你有一个可取消的 `context` 并从中创建了一个带有超时的 `context`，则当任何一个被取消或超时时，该 `context` 都会变为“已完成”。
+
+### context 和测试
+在单元测试中，你可能经常使用 `context.Background()`。但为了更真实地模拟生产环境，考虑使用带有超时或取消功能的 `context` 来确保你的代码正确响应这些信号。
+
+```go
+func TestSomeFunction(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	// 运行你的测试函数或方法
+	result, err := someFunction(ctx)
+	// ...
+}
+```
+
+### 注意 context 的资源使用
+即使一个 `context` 完成了（被取消、超时或有其他错误），与该 `context` 相关联的资源（如计时器或内部数据）可能仍然存在直到垃圾收集。因此，当使用 `context.WithTimeout` 或 `context.WithDeadline` 时，记得总是调用返回的 `cancel` 函数来释放这些资源，即使你认为 `context` 已经完成了。
+
+```go
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+doSomething(ctx)
+cancel() // 释放与ctx相关的资源
+```
+
