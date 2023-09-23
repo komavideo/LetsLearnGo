@@ -1024,3 +1024,108 @@ db.Select("name", "age").Find(&users)
 ```go
 db.Clauses(clause.OnConflict{UpdateAll: true}).Create(&user)
 ```
+
+### 处理软删除：
+
+默认情况下，当你调用`Delete`方法时，记录不会从数据库中删除，而是更新其`DeletedAt`字段的值。这被称为软删除。被软删除的记录不会出现在`Find`的查询结果中。
+
+```go
+// 为模型启用软删除，只需要在模型中包含 DeletedAt 字段
+type User struct {
+    gorm.Model
+    Name string
+}
+
+// 删除记录
+db.Delete(&user)
+
+// 使用 Unscoped 方法检索被软删除的记录
+db.Unscoped().Find(&users)
+```
+
+### 模型的字段和表命名约定：
+
+默认情况下，`gorm` 会将结构体名称的复数形式作为表名，例如`User`模型对应的表名是`users`。结构体字段名称首字母大写的形式作为数据库列名，例如`UserName`对应的列名是`user_name`。
+
+如果想指定自定义的表名或列名，可以使用标签。
+
+```go
+type User struct {
+    ID   uint   `gorm:"column:my_id"`
+    Name string `gorm:"column:my_name"`
+}
+
+func (User) TableName() string {
+    return "my_users"
+}
+```
+
+### 创建表时指定选项：
+
+你可以在创建表时设置特定的选项，例如字符集或排序规则。
+
+```go
+db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&User{})
+```
+
+### 获取主键：
+
+使用`InstanceSet`可以检索模型的主键信息。
+
+```go
+primaryKey := db.InstanceSet("gorm:primary_key", primaryKey)
+```
+
+### 使用指针或值接收查询结果：
+
+在查询结果时，可以使用结构体的指针或值。使用指针是最常见的，因为这样可以确保在没有找到记录时结构体不会被填充。
+
+```go
+var u User
+db.First(&u, 1)  // 使用指针
+
+var u2 User
+db.First(u2, 1)  // 使用值，不推荐这样做
+```
+
+### 使用Count获取记录数量：
+
+你可以使用`Count`方法来获取查询的记录数量。
+
+```go
+var count int64
+db.Model(&User{}).Where("name = ?", "jinzhu").Count(&count)
+```
+
+### 使用Group和Having进行分组查询：
+
+`gorm` 支持分组查询和`HAVING`子句。
+
+```go
+rows, err := db.Table("orders").Select("date(created_at) as date, sum(amount) as total").Group("date(created_at)").Having("sum(amount) > ?", 100).Rows()
+```
+
+### 使用Not进行否定查询：
+
+`Not` 方法允许你执行否定查询。
+
+```go
+db.Not("name = ?", "jinzhu").Find(&users)
+```
+
+### 使用Or进行联合查询：
+
+`Or` 方法允许你组合多个条件。
+
+```go
+db.Where("name = ?", "jinzhu").Or("name = ?", "jinzha").Find(&users)
+```
+
+### 使用Column指定更新的列：
+
+`Update` 方法默认会更新所有列，但你可以使用`Column`方法指定只更新某些列。
+
+```go
+db.Model(&user).Select("Name", "Age").Updates(map[string]interface{}{"Name": "jinzhu", "Age": 30})
+```
+
