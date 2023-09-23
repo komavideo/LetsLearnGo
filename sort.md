@@ -223,3 +223,77 @@ func main() {
 ```
 上面的代码将按照键的字母顺序输出 map 的内容。
 
+### 11. 基于多个切片排序
+假设你有多个切片，并希望基于其中一个切片的顺序来重新排列其他切片的元素。例如，你有一个切片代表名字和另一个切片代表年龄，你想基于名字的排序来重新排列年龄。你可以这么做：
+
+```go
+package main
+
+import (
+	"fmt"
+	"sort"
+)
+
+type MultiSorter struct {
+	names []string
+	ages  []int
+}
+
+func (ms *MultiSorter) Len() int           { return len(ms.names) }
+func (ms *MultiSorter) Swap(i, j int)      { ms.names[i], ms.names[j] = ms.names[j], ms.names[i]; ms.ages[i], ms.ages[j] = ms.ages[j], ms.ages[i] }
+func (ms *MultiSorter) Less(i, j int) bool { return ms.names[i] < ms.names[j] }
+
+func main() {
+	names := []string{"Zoe", "John", "Alfred"}
+	ages := []int{25, 30, 20}
+
+	ms := &MultiSorter{names: names, ages: ages}
+	sort.Sort(ms)
+
+	fmt.Println(names) // ["Alfred", "John", "Zoe"]
+	fmt.Println(ages)  // [20, 30, 25]
+}
+```
+
+### 12. 自定义排序函数
+有时候，你可能只想快速实现一个自定义的排序逻辑，而不是定义一个新的类型。你可以使用 `sort.SliceStable`，它类似于 `sort.Slice`，但它保证相等的元素的原始顺序不会改变：
+
+```go
+people := []Person{
+	{"John", 25},
+	{"Bob", 25},
+	{"Michael", 17},
+	{"Jenny", 26},
+}
+
+sort.SliceStable(people, func(i, j int) bool {
+	if people[i].Age == people[j].Age {
+		return people[i].Name < people[j].Name
+	}
+	return people[i].Age < people[j].Age
+})
+
+fmt.Println(people)
+```
+这个例子首先按年龄排序，如果年龄相同，则按名字的字母顺序排序。
+
+### 13. 查找与给定值相等或最接近的元素
+`sort.Search` 可以帮助你查找满足某条件的第一个元素。这在查找与给定值相等或最接近的元素时很有用：
+
+```go
+nums := []int{1, 2, 4, 5, 7, 8, 10}
+target := 6
+
+index := sort.Search(len(nums), func(i int) bool {
+	return nums[i] >= target
+})
+
+if index < len(nums) {
+	if nums[index] == target {
+		fmt.Println("Found:", target)
+	} else {
+		fmt.Println("Closest:", nums[index])
+	}
+}
+```
+
