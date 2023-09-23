@@ -297,3 +297,75 @@ if index < len(nums) {
 }
 ```
 
+### 14. 在已排序的切片中插入元素
+当你有一个已排序的切片并想插入一个新的元素并保持其有序性时，你可以使用 `sort.Search` 与内置的切片操作一同工作：
+
+```go
+nums := []int{1, 3, 5, 7, 9}
+val := 4
+
+// 查找应该插入的位置
+index := sort.SearchInts(nums, val)
+
+// 插入元素
+nums = append(nums, 0)          // 在切片末尾添加一个元素
+copy(nums[index+1:], nums[index:]) // 将数据从插入点开始向后移动
+nums[index] = val
+
+fmt.Println(nums) // [1, 3, 4, 5, 7, 9]
+```
+
+### 15. 对自定义切片进行稳定排序
+与 `sort.Slice` 类似，`sort.SliceStable` 函数也可以帮助你快速为自定义切片进行排序，但它保证了相等元素的原始顺序：
+
+```go
+data := []Person{
+	{"John", 25},
+	{"Anna", 25},
+	{"Zane", 25},
+	{"Mike", 30},
+}
+
+sort.SliceStable(data, func(i, j int) bool {
+	return data[i].Age < data[j].Age
+})
+
+fmt.Println(data)
+```
+在这里，尽管三个人的年龄都是 `25`，但它们的原始顺序被保留了下来。
+
+### 16. Floats 的排序
+`sort` 包还为浮点数切片提供了类似的便利函数：
+
+```go
+floats := []float64{3.14, 2.71, 1.41, 1.73}
+sort.Float64s(floats)
+fmt.Println(floats) // [1.41, 1.73, 2.71, 3.14]
+```
+你还可以使用 `sort.Float64sAreSorted` 来检查浮点数切片是否已排序：
+```go
+isSorted := sort.Float64sAreSorted(floats)
+fmt.Println(isSorted) // true
+```
+
+### 17. 使用 Search 的一些高级应用
+使用 `sort.Search`，你不仅仅可以查找元素，还可以执行一些高级的操作，如查找满足某条件的第一个元素。例如，找到第一个大于 `5` 的元素：
+
+```go
+nums := []int{1, 3, 4, 6, 7, 8, 10}
+index := sort.Search(len(nums), func(i int) bool {
+	return nums[i] > 5
+})
+if index != len(nums) {
+	fmt.Println("First number greater than 5:", nums[index]) // 6
+}
+```
+
+### 
+
+```go
+```
+### 
+
+```go
+```
