@@ -361,11 +361,75 @@ if index != len(nums) {
 }
 ```
 
-### 
+### 18. Reverse：反转排序
+如果你想以降序而不是升序对切片进行排序，你可以使用 `sort.Reverse`。它接受一个 `sort.Interface` 类型，并返回一个新的 `sort.Interface`，当调用 `Less` 方法时，它将返回相反的结果：
 
 ```go
+ints := []int{1, 5, 3, 7, 2, 8}
+sort.Sort(sort.Reverse(sort.IntSlice(ints)))
+fmt.Println(ints) // [8, 7, 5, 3, 2, 1]
 ```
-### 
+
+### 19. 自定义比较函数排序
+使用 `sort.Slice` 和 `sort.SliceStable` 可以简化自定义排序的代码。以下是一个例子，它首先按长度对字符串切片进行排序，然后在长度相等的情况下按字母排序：
 
 ```go
+strs := []string{"apple", "banana", "kiwi", "cherry"}
+sort.Slice(strs, func(i, j int) bool {
+	if len(strs[i]) == len(strs[j]) {
+		return strs[i] < strs[j]
+	}
+	return len(strs[i]) < len(strs[j])
+})
+fmt.Println(strs) // [kiwi, apple, cherry, banana]
 ```
+
+### 20. Strings 方法排序
+对于字符串切片，你可以使用 sort.Strings，sort.StringsAreSorted 和 sort.StringSlice 来进行排序、检查是否已排序以及定义排序接口。
+
+```go
+fruits := []string{"orange", "apple", "banana"}
+sort.Strings(fruits)
+fmt.Println(fruits) // [apple, banana, orange]
+
+isSorted := sort.StringsAreSorted(fruits)
+fmt.Println(isSorted) // true
+```
+
+### 21. 对结构体切片进行多字段排序
+在某些情况下，你可能想根据结构体的多个字段来排序。例如，你可能想先按年龄排序，然后再按名字排序：
+
+```go
+type Person struct {
+	Name string
+	Age  int
+}
+
+people := []Person{
+	{"John", 30},
+	{"Doe", 25},
+	{"Jane", 25},
+}
+
+sort.Slice(people, func(i, j int) bool {
+	if people[i].Age == people[j].Age {
+		return people[i].Name < people[j].Name
+	}
+	return people[i].Age < people[j].Age
+})
+```
+这样，当两个人的年龄相同时，他们会按照名字的字母顺序进行排序。
+
+### 22. 使用 SearchStrings, SearchInts, 和 SearchFloat64s
+除了通用的 `sort.Search`，`sort` 包还为字符串、整数和浮点数提供了专用的搜索函数。
+
+```go
+strs := []string{"apple", "banana", "cherry"}
+index := sort.SearchStrings(strs, "banana")
+fmt.Println(index) // 1
+
+ints := []int{1, 2, 3, 4, 5}
+indexInt := sort.SearchInts(ints, 4)
+fmt.Println(indexInt) // 3
+```
+
