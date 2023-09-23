@@ -502,3 +502,82 @@ func main() {
 }
 ```
 
+### 检查 context 的完成状态
+有时你可能只想知道 `context` 是否已完成，而不是立即执行某些操作。你可以通过检查 `<-ctx.Done()` 来实现这一点，但如果你只想做一个快速检查而不阻塞，可以使用 `ctx.Err()`：
+
+```go
+if err := ctx.Err(); err != nil {
+	fmt.Println("Context error:", err)
+}
+```
+
+### context 和 Go 例程的生命周期
+一个常见的模式是为每个 `Go` 例程提供一个 `context`，以便可以独立地控制每个 `Go` 例程的生命周期。例如，你可能有一个生产者和多个消费者：
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"time"
+)
+
+func producer(ctx context.Context, ch chan int) {
+	n := 0
+	for {
+		select {
+		case <-ctx.Done():
+			close(ch)
+			return
+		case ch <- n:
+			n++
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+}
+
+func consumer(ctx context.Context, id int, ch chan int) {
+	for {
+		select {
+		case v, ok := <-ch:
+			if !ok {
+				return
+			}
+			fmt.Printf("Consumer %d: received %d\n", id, v)
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+func main() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	ch := make(chan int)
+	go producer(ctx, ch)
+	for i := 0; i < 3; i++ {
+		go consumer(ctx, i, ch)
+	}
+
+	<-ctx.Done()
+}
+```
+
+### 使用 context.TODO()
+当你不确定应该使用哪个 `context` 或你正在重构代码而不想立即引入 `context` 时，可以使用 `context.TODO()`。它返回一个非 `nil` 的空 `context`，这可以作为一个临时解决方案，但你应该尽快替换它。
+
+```go
+func SomeFunction() {
+	// TODO: Decide which context to use.
+	ctx := context.TODO()
+	doWork(ctx)
+}
+```
+
+### 不要存储 context 在结构体中作为长期使用
+虽然有时可能会被诱惑将 `context` 存储为结构体的一部分，但你应该避免这样做，除非你有明确的理由。`context` 是设计用于单次请求的：它不应该跨多个请求或长时间存活的对象共享。
+
+如果你发现自己经常需要在结构体中存储 `context`，那么可能是你的设计需要重新思考。
+
