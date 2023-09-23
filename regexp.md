@@ -753,10 +753,150 @@ func main() {
 }
 ```
 
-### 
+### 完整的匹配:
+使用 `^` 和 `$` 可以确保整个字符串与正则表达式匹配。
 
 ```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`^abc$`)
+	fmt.Println(re.MatchString("abc"))   // 输出: true
+	fmt.Println(re.MatchString("abcdef")) // 输出: false
+	fmt.Println(re.MatchString("xabc"))   // 输出: false
+}
 ```
+
+### 命令行工具的简单实现:
+您可以使用 `regexp` 库创建一个简单的命令行工具来匹配和替换文本。
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"regexp"
+)
+
+func main() {
+	if len(os.Args) != 3 {
+		fmt.Println("Usage: match <pattern> <replacement>")
+		return
+	}
+
+	pattern := os.Args[1]
+	replacement := os.Args[2]
+
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		fmt.Println("Invalid pattern:", err)
+		return
+	}
+
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Println(re.ReplaceAllString(line, replacement))
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "Reading from stdin:", err)
+	}
+}
+```
+
+### 检查是否包含子模式:
+可以使用 `(?i)` 在正则表达式中执行不区分大小写的匹配。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(?i)go`)
+	fmt.Println(re.MatchString("GOlang")) // 输出: true
+}
+```
+
+### 限制匹配的次数:
+可以使用 `{m,n}` 来匹配一个模式至少 `m` 次，但不超过 `n` 次。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`a{2,4}`)
+	fmt.Println(re.FindAllString("aaaaaa", -1)) // 输出: [aaaa aa]
+}
+```
+
+### 匹配字母、数字或下划线:
+`\w` 是一个常见的字符类，用于匹配任何字母、数字或下划线。对应的，`\W` 匹配任何非字母、数字或下划线的字符。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\w+`)
+	fmt.Println(re.FindAllString("Hello, world!", -1)) // 输出: [Hello world]
+}
+```
+
+### 匹配任何空白字符:
+`\s` 匹配任何空白字符，包括空格、制表符、换行符等。相对的，`\S` 匹配任何非空白字符。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`\S+`)
+	fmt.Println(re.FindAllString("Hello, world!", -1)) // 输出: [Hello, world!]
+}
+```
+
+### 匹配字符串的开头和结尾:
+在多行模式下，`^` 和 `$` 分别匹配每一行的开头和结尾。
+
+```go
+package main
+
+import (
+	"fmt"
+	"regexp"
+)
+
+func main() {
+	re := regexp.MustCompile(`(?m)^test$`)
+	fmt.Println(re.FindAllString("test\ntest\ntesting", -1)) // 输出: [test test]
+}
+```
+
 ### 
 
 ```go
