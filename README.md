@@ -34,6 +34,10 @@
 
 + [GORM 数据库开发](/gorm.md)
 
+## 应用开发
+
++ [Cobra 命令行工具开发](/cobra.md)
+
 ## The Go Playground
 
 https://go.dev/play/
