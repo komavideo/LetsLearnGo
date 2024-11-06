@@ -226,6 +226,7 @@ func SaveFile(w Writer, data []byte) error {
 
 type FileWriter struct{}
 
+// 为FileWriter结构体增加一个Write方法
 func (fw FileWriter) Write(data []byte) (int, error) {
     // 文件写入逻辑
     return len(data), nil
