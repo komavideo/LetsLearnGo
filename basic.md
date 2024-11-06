@@ -406,8 +406,7 @@ var wg sync.WaitGroup
 
 func worker(id int) {
     defer wg.Done()
-    fmt.Printf("Worker %d starting
-", id)
+    fmt.Printf("Worker %d starting", id)
     // 执行工作...
 }
 
