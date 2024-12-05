@@ -33,6 +33,7 @@
 ## 数据库开发
 
 + [GORM 数据库开发](/gorm.md)
++ [将GORM集成到Clean Architecture架构](/GORM-in-CleanArchitecture.md)
 
 ## 应用开发
 
